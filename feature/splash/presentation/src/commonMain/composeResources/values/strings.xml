@@ -1,0 +1,4 @@
+<resources>
+    <string name="splash_tagline">YOUR ON-ROUTE COMPANION</string>
+    <string name="splash_initializing">Initializing…</string>
+</resources>
