@@ -1,7 +1,8 @@
 package com.example.spotter.core.navigation
 
-import androidx.navigation.NavGraphBuilder
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
 
 fun interface NavGraphProvider {
-    fun registerGraph(provider: NavGraphBuilder)
+    fun registerEntries(scope: EntryProviderScope<NavKey>)
 }

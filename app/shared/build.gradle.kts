@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("spotter.library.compose")
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -60,7 +61,7 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
-            implementation(libs.navigation.compose)
+            implementation(libs.navigation3.ui)
         }
     }
 }

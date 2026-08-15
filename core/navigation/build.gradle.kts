@@ -29,7 +29,7 @@ kotlin {
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
-            implementation(libs.navigation.compose)
+            api(libs.navigation3.ui)
             implementation(libs.kotlinx.serialization.json)
             api(libs.koin.core)
         }

@@ -5,9 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import coil3.network.ktor3.KtorNetworkFetcherFactory
@@ -22,6 +22,7 @@ import com.example.spotter.feature.splash.presentation.ui.SplashScreen
 import com.example.spotter.shared.localization.LocalAppTheme
 import com.example.spotter.shared.localization.SpotterAppEnvironment
 import com.example.spotter.shared.localization.deviceLanguageTag
+import com.example.spotter.shared.navigation.spotterNavSavedStateConfiguration
 import org.koin.compose.koinInject
 import org.koin.mp.KoinPlatform.getKoin
 
@@ -52,7 +53,7 @@ fun SpotterApp() {
         ThemeMode.DARK -> true
     }
 
-    val navController = rememberNavController()
+    val backStack = rememberNavBackStack(spotterNavSavedStateConfiguration, SplashScreenDestination)
     val providers: List<NavGraphProvider> = getKoin().getAll()
 
     SpotterAppEnvironment(
@@ -60,27 +61,25 @@ fun SpotterApp() {
         darkTheme = themeOverride,
     ) {
         SpotterTheme(darkTheme = LocalAppTheme.current) {
-            NavHost(
+            NavDisplay(
                 modifier = Modifier.fillMaxSize(),
-                navController = navController,
-                startDestination = SplashScreenDestination,
-            ) {
-                composable<SplashScreenDestination> {
-                    SplashScreen(
-                        onNavigateHome = {
-                            navController.navigate(HomeScreenDestination) {
-                                popUpTo(SplashScreenDestination) {
-                                    inclusive = true
-                                }
-                            }
-                        },
-                    )
-                }
+                backStack = backStack,
+                onBack = { backStack.removeLastOrNull() },
+                entryProvider = entryProvider {
+                    entry<SplashScreenDestination> {
+                        SplashScreen(
+                            onNavigateHome = {
+                                backStack.clear()
+                                backStack.add(HomeScreenDestination)
+                            },
+                        )
+                    }
 
-                providers.forEach { provider ->
-                    provider.registerGraph(provider = this)
-                }
-            }
+                    providers.forEach { provider ->
+                        provider.registerEntries(this)
+                    }
+                },
+            )
         }
     }
 }
