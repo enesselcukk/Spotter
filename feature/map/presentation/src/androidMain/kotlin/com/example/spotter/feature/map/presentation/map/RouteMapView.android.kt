@@ -22,6 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
@@ -37,10 +39,10 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 
-private const val MapBackgroundHex = "#0E1116"
 private const val RouteCasingHex = "#0B3D6B"
 private const val RouteStrokeHex = "#4285F4"
 private const val DefaultZoom = 15.0
+private const val FollowZoom = 18.0
 private const val RoutePaddingPx = 140
 
 @Composable
@@ -52,11 +54,14 @@ actual fun RouteMapView(
     mapState: RouteMapState,
     onSpotSelected: (Long) -> Unit,
     modifier: Modifier,
+    followUser: Boolean,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var isMapReady by remember { mutableStateOf(false) }
     val backgroundColor = MaterialTheme.colorScheme.background
+    val backgroundArgb = backgroundColor.toArgb()
+    val usesDarkTiles = backgroundColor.luminance() < 0.5f
 
     val mapView = remember {
         MapView(context).apply {
@@ -64,10 +69,8 @@ actual fun RouteMapView(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
             )
-            setBackgroundColor(Color.parseColor(MapBackgroundHex))
             setMultiTouchControls(true)
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
-            setTileSource(DarkMapTileSource)
             isHorizontalMapRepetitionEnabled = false
             isVerticalMapRepetitionEnabled = false
             isTilesScaledToDpi = true
@@ -109,7 +112,15 @@ actual fun RouteMapView(
         }
     }
 
-    LaunchedEffect(mapView, spots, selectedSpotId, userLocation, routeGeometry) {
+    LaunchedEffect(mapView, usesDarkTiles, backgroundArgb) {
+        mapView.setTileSource(if (usesDarkTiles) DarkMapTileSource else LightMapTileSource)
+        mapView.setBackgroundColor(backgroundArgb)
+        mapView.invalidate()
+    }
+
+    var userMarker by remember { mutableStateOf<Marker?>(null) }
+
+    LaunchedEffect(mapView, spots, selectedSpotId, routeGeometry, backgroundArgb) {
         mapView.overlays.clear()
 
         if (routeGeometry.size > 1) {
@@ -124,7 +135,7 @@ actual fun RouteMapView(
                     position = GeoPoint(spot.lat, spot.lon)
                     title = spot.name
                     setAnchor(Marker.ANCHOR_CENTER, if (isSelected) Marker.ANCHOR_BOTTOM else Marker.ANCHOR_CENTER)
-                    icon = if (isSelected) destinationPin(context) else spotDot(context)
+                    icon = if (isSelected) destinationPin(context) else spotDot(context, backgroundArgb)
                     setOnMarkerClickListener { _, _ ->
                         onSpotSelected(spot.id)
                         true
@@ -133,21 +144,32 @@ actual fun RouteMapView(
             )
         }
 
-        mapView.overlays.add(
-            Marker(mapView).apply {
-                position = GeoPoint(userLocation.latitude, userLocation.longitude)
-                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                icon = userDot(context)
-                setInfoWindow(null)
-            },
-        )
+        val marker = Marker(mapView).apply {
+            position = GeoPoint(userLocation.latitude, userLocation.longitude)
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+            icon = userDot(context)
+            setInfoWindow(null)
+        }
+        mapView.overlays.add(marker)
+        userMarker = marker
 
-        mapView.post {
-            if (routeGeometry.size > 1) {
-                mapView.zoomToBoundingBox(routeGeometry.toBoundingBox(), true, RoutePaddingPx)
-            } else {
-                mapView.controller.animateTo(GeoPoint(userLocation.latitude, userLocation.longitude))
+        if (!followUser) {
+            mapView.post {
+                if (routeGeometry.size > 1) {
+                    mapView.zoomToBoundingBox(routeGeometry.toBoundingBox(), true, RoutePaddingPx)
+                } else {
+                    mapView.controller.animateTo(GeoPoint(userLocation.latitude, userLocation.longitude))
+                }
             }
+        }
+        mapView.invalidate()
+    }
+
+    LaunchedEffect(mapView, userLocation, followUser) {
+        userMarker?.position = GeoPoint(userLocation.latitude, userLocation.longitude)
+        if (followUser) {
+            mapView.controller.setZoom(FollowZoom)
+            mapView.controller.animateTo(GeoPoint(userLocation.latitude, userLocation.longitude))
         }
         mapView.invalidate()
     }
@@ -156,8 +178,8 @@ actual fun RouteMapView(
         val command = mapState.pendingCommand ?: return@LaunchedEffect
         when (command.camera) {
             MapCamera.FollowUser -> {
+                mapView.controller.setZoom(if (followUser) FollowZoom else DefaultZoom)
                 mapView.controller.animateTo(GeoPoint(userLocation.latitude, userLocation.longitude))
-                mapView.controller.setZoom(DefaultZoom)
             }
 
             MapCamera.FitRoute -> {
@@ -226,14 +248,23 @@ private fun userDot(context: Context): BitmapDrawable {
     return BitmapDrawable(context.resources, bitmap)
 }
 
-private fun spotDot(context: Context): BitmapDrawable {
+private fun spotDot(context: Context, haloColor: Int): BitmapDrawable {
     val size = 34
     val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     val radius = size / 2f
 
     canvas.drawCircle(radius, radius, radius - 2f, fillPaint("#FFB300"))
-    canvas.drawCircle(radius, radius, radius - 2f, strokePaint("#0E1116", 3f))
+    canvas.drawCircle(
+        radius,
+        radius,
+        radius - 2f,
+        Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = haloColor
+            style = Paint.Style.STROKE
+            strokeWidth = 3f
+        },
+    )
     return BitmapDrawable(context.resources, bitmap)
 }
 
@@ -270,16 +301,20 @@ private fun strokePaint(colorHex: String, width: Float) = Paint(Paint.ANTI_ALIAS
     strokeWidth = width
 }
 
-private val DarkMapTileSource = XYTileSource(
-    "CartoDB.DarkMatter",
+private val DarkMapTileSource = cartoTileSource("CartoDB.DarkMatter", "dark_all")
+
+private val LightMapTileSource = cartoTileSource("CartoDB.Positron", "light_all")
+
+private fun cartoTileSource(name: String, style: String) = XYTileSource(
+    name,
     0,
     19,
     256,
     ".png",
     arrayOf(
-        "https://a.basemaps.cartocdn.com/dark_all/",
-        "https://b.basemaps.cartocdn.com/dark_all/",
-        "https://c.basemaps.cartocdn.com/dark_all/",
+        "https://a.basemaps.cartocdn.com/$style/",
+        "https://b.basemaps.cartocdn.com/$style/",
+        "https://c.basemaps.cartocdn.com/$style/",
     ),
     "© OpenStreetMap contributors © CARTO",
 )

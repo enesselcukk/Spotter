@@ -9,6 +9,8 @@
     <string name="map_mode_cycling">Bisiklet</string>
     <string name="map_mode_walking">Yürüyüş</string>
     <string name="map_start_navigation">Başlat</string>
+    <string name="map_stop_navigation">Durdur</string>
+    <string name="map_you_have_arrived">Hedefe vardınız</string>
     <string name="map_steps_show">Adımlar</string>
     <string name="map_steps_hide">Adımları gizle</string>
     <string name="map_recenter">Konumuma dön</string>

@@ -37,6 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.spotter.core.datastore.AppLanguage
 import com.example.spotter.core.datastore.DistanceUnit
 import com.example.spotter.core.datastore.ThemeMode
+import com.example.spotter.core.designsystem.component.spotterStatusBarsPadding
 import com.example.spotter.core.designsystem.theme.SpotterBlue
 import com.example.spotter.core.designsystem.theme.SpotterYellow
 import com.example.spotter.core.spotui.SpotterTab
@@ -74,7 +75,8 @@ fun SettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.background),
+            .background(colors.background)
+            .spotterStatusBarsPadding(),
     ) {
         SettingsContent(
             state = uiState,

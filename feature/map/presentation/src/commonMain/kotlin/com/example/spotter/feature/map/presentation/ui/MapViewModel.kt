@@ -11,7 +11,9 @@ import com.example.spotter.feature.map.domain.model.RoutePlan
 import com.example.spotter.feature.map.domain.model.RoutePoint
 import com.example.spotter.feature.map.domain.model.TravelMode
 import com.example.spotter.feature.map.domain.repository.MapSpotsHandoff
+import com.example.spotter.feature.map.domain.repository.NavigationLocationTracker
 import com.example.spotter.feature.map.domain.usecase.GetRoutePlanUseCase
+import com.example.spotter.feature.map.domain.util.NavigationProgressCalculator
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +24,7 @@ import kotlinx.coroutines.launch
 class MapViewModel(
     private val getRoutePlanUseCase: GetRoutePlanUseCase,
     private val mapSpotsHandoff: MapSpotsHandoff,
+    private val navigationLocationTracker: NavigationLocationTracker,
     private val userSettingsRepository: UserSettingsRepository,
     private val navigationManager: NavigationManager,
 ) : CoreViewModel(), MapActions {
@@ -30,6 +33,7 @@ class MapViewModel(
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
 
     private var routeJob: Job? = null
+    private var locationJob: Job? = null
     private var currentDestination: MapScreenDestination? = null
 
     init {
@@ -47,6 +51,7 @@ class MapViewModel(
     fun start(destination: MapScreenDestination) {
         if (currentDestination == destination) return
         currentDestination = destination
+        stopNavigation()
 
         val allSpots = mapSpotsHandoff.peek()
         val spots = destination.category
@@ -69,12 +74,14 @@ class MapViewModel(
     }
 
     override fun onSpotSelected(spotId: Long) {
+        if (_uiState.value.isNavigating) return
         if (_uiState.value.selectedSpotId == spotId) return
         _uiState.update { it.copy(selectedSpotId = spotId, areStepsExpanded = false) }
         loadRoute()
     }
 
     override fun onTravelModeSelected(travelMode: TravelMode) {
+        if (_uiState.value.isNavigating) return
         if (_uiState.value.travelMode == travelMode) return
         _uiState.update { it.copy(travelMode = travelMode) }
         loadRoute()
@@ -88,8 +95,58 @@ class MapViewModel(
         loadRoute()
     }
 
+    override fun onStartNavigation() {
+        val state = _uiState.value
+        val plan = state.routePlan ?: return
+        if (state.isNavigating) return
+
+        _uiState.update {
+            it.copy(
+                isNavigating = true,
+                areStepsExpanded = false,
+                navigationProgress = NavigationProgressCalculator.calculate(plan, it.userLocation),
+            )
+        }
+        observeLocation()
+    }
+
+    override fun onStopNavigation() {
+        stopNavigation()
+    }
+
     override fun onBack() {
+        if (_uiState.value.isNavigating) {
+            stopNavigation()
+            return
+        }
         navigationManager.navigate(NavigationCommand.NavigateUp)
+    }
+
+    private fun stopNavigation() {
+        locationJob?.cancel()
+        locationJob = null
+        _uiState.update { it.copy(isNavigating = false, navigationProgress = null) }
+    }
+
+    private fun observeLocation() {
+        locationJob?.cancel()
+        locationJob = viewModelScope.launch {
+            navigationLocationTracker.locations().collect { point ->
+                _uiState.update { current ->
+                    if (!current.isNavigating) return@update current
+                    val plan = current.routePlan ?: return@update current.copy(userLocation = point)
+                    // Simulator / stale GPS can jump thousands of km away. Following that
+                    // hides the route (iOS default is San Francisco) and falsely reports arrival.
+                    if (!NavigationProgressCalculator.isOnRoute(plan.geometry, point)) {
+                        return@update current
+                    }
+                    current.copy(
+                        userLocation = point,
+                        navigationProgress = NavigationProgressCalculator.calculate(plan, point),
+                    )
+                }
+            }
+        }
     }
 
     private fun loadRoute() {

@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.spotter.core.designsystem.component.spotterNavigationBarsPadding
 import com.example.spotter.core.designsystem.theme.SpotterBlue
 import com.example.spotter.core.designsystem.theme.SpotterYellow
 import com.example.spotter.core.spotui.SpotterTab
@@ -78,7 +79,8 @@ fun SpotterBottomBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 20.dp),
+            .spotterNavigationBarsPadding()
+            .padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 12.dp),
     ) {
         BoxWithConstraints(
             modifier = Modifier

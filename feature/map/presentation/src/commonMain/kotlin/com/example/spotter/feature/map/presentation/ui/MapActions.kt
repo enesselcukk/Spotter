@@ -7,5 +7,7 @@ internal interface MapActions {
     fun onTravelModeSelected(travelMode: TravelMode)
     fun onStepsToggle()
     fun onRetryRoute()
+    fun onStartNavigation()
+    fun onStopNavigation()
     fun onBack()
 }

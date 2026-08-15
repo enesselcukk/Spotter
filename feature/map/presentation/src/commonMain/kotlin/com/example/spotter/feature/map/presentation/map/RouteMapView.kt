@@ -19,6 +19,7 @@ expect fun RouteMapView(
     mapState: RouteMapState,
     onSpotSelected: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    followUser: Boolean = false,
 )
 
 enum class MapCamera {

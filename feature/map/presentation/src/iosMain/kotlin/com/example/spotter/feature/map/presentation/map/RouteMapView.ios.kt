@@ -31,6 +31,7 @@ import platform.UIKit.UIColor
 import platform.UIKit.UIEdgeInsetsMake
 
 private const val DefaultRadiusMeters = 1_500.0
+private const val FollowRadiusMeters = 180.0
 private const val MinRadiusMeters = 120.0
 private const val MaxRadiusMeters = 400_000.0
 
@@ -44,6 +45,7 @@ actual fun RouteMapView(
     mapState: RouteMapState,
     onSpotSelected: (Long) -> Unit,
     modifier: Modifier,
+    followUser: Boolean,
 ) {
     val camera = remember { CameraState() }
     val delegate = remember { RouteMapDelegate() }
@@ -59,7 +61,9 @@ actual fun RouteMapView(
         }
     }
 
-    LaunchedEffect(mapView, spots, selectedSpotId, userLocation, routeGeometry) {
+    val userAnnotation = remember { MKPointAnnotation() }
+
+    LaunchedEffect(mapView, spots, selectedSpotId, routeGeometry) {
         mapView.removeAnnotations(mapView.annotations)
         mapView.removeOverlays(mapView.overlays)
 
@@ -72,22 +76,33 @@ actual fun RouteMapView(
             )
         }
 
-        mapView.addAnnotation(
-            MKPointAnnotation().apply {
-                setCoordinate(CLLocationCoordinate2DMake(userLocation.latitude, userLocation.longitude))
-            },
+        userAnnotation.setCoordinate(
+            CLLocationCoordinate2DMake(userLocation.latitude, userLocation.longitude),
         )
+        mapView.addAnnotation(userAnnotation)
 
         val polyline = routeGeometry.toPolyline()
         if (polyline != null) {
             mapView.addOverlay(polyline)
-            mapView.setVisibleMapRect(
-                polyline.boundingMapRect,
-                edgePadding = UIEdgeInsetsMake(96.0, 48.0, 280.0, 48.0),
-                animated = true,
-            )
-        } else {
+            if (!followUser) {
+                mapView.setVisibleMapRect(
+                    polyline.boundingMapRect,
+                    edgePadding = UIEdgeInsetsMake(96.0, 48.0, 280.0, 48.0),
+                    animated = true,
+                )
+            }
+        } else if (!followUser) {
             camera.radiusMeters = DefaultRadiusMeters
+            mapView.focusOn(userLocation, camera.radiusMeters)
+        }
+    }
+
+    LaunchedEffect(mapView, userLocation, followUser) {
+        userAnnotation.setCoordinate(
+            CLLocationCoordinate2DMake(userLocation.latitude, userLocation.longitude),
+        )
+        if (followUser) {
+            camera.radiusMeters = FollowRadiusMeters
             mapView.focusOn(userLocation, camera.radiusMeters)
         }
     }
@@ -96,7 +111,7 @@ actual fun RouteMapView(
         val command = mapState.pendingCommand ?: return@LaunchedEffect
         when (command.camera) {
             MapCamera.FollowUser -> {
-                camera.radiusMeters = DefaultRadiusMeters
+                camera.radiusMeters = if (followUser) FollowRadiusMeters else DefaultRadiusMeters
                 mapView.focusOn(userLocation, camera.radiusMeters)
             }
 

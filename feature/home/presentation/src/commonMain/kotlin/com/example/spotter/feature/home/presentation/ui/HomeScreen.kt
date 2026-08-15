@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.spotter.core.designsystem.component.spotterStatusBarsPadding
 import com.example.spotter.core.designsystem.theme.SpotterBlue
 import com.example.spotter.core.designsystem.theme.SpotterYellow
 import com.example.spotter.core.spotui.SpotCategories
@@ -72,7 +73,8 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.background),
+            .background(colors.background)
+            .spotterStatusBarsPadding(),
     ) {
         when (val state = uiState) {
             HomeUiState.Loading -> {

@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.spotter.core.designsystem.component.spotterStatusBarsPadding
 import com.example.spotter.core.spotui.SpotterTab
 import com.example.spotter.core.spotui.component.SpotDetailCard
 import com.example.spotter.core.spotui.component.SpotterBottomBar
@@ -47,7 +48,8 @@ fun FavoritesScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.background),
+            .background(colors.background)
+            .spotterStatusBarsPadding(),
     ) {
         FavoritesHeader(count = uiState.favorites.size)
 

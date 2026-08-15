@@ -9,6 +9,8 @@
     <string name="map_mode_cycling">Bike</string>
     <string name="map_mode_walking">Walk</string>
     <string name="map_start_navigation">Start</string>
+    <string name="map_stop_navigation">Stop</string>
+    <string name="map_you_have_arrived">You have arrived</string>
     <string name="map_steps_show">Steps</string>
     <string name="map_steps_hide">Hide steps</string>
     <string name="map_recenter">Recenter</string>

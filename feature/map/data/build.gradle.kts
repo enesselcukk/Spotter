@@ -36,5 +36,8 @@ kotlin {
             implementation(libs.ktor.client.core)
             api(libs.koin.core)
         }
+        androidMain.dependencies {
+            implementation(libs.play.services.location)
+        }
     }
 }

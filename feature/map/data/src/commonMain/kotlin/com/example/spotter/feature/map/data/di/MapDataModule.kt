@@ -12,4 +12,7 @@ val mapDataModule: Module = module {
     single { RoutingApi(httpClient = get()) }
     single<RouteRepository> { RouteRepositoryImpl(routingApi = get()) }
     single<MapSpotsHandoff> { MapSpotsHandoffImpl() }
+    bindNavigationLocationTracker()
 }
+
+internal expect fun Module.bindNavigationLocationTracker()
