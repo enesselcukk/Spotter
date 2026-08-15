@@ -1,0 +1,30 @@
+<resources>
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_preferences">PREFERENCES</string>
+    <string name="settings_section_localization">LOCALIZATION</string>
+    <string name="settings_list_preference">List Preference</string>
+    <string name="settings_list_default_view">Default View</string>
+    <string name="settings_list_default_view_list">List</string>
+    <string name="settings_list_default_view_map">Map</string>
+    <string name="settings_list_sort_order">Sort Order</string>
+    <string name="settings_list_sort_distance">Nearest first</string>
+    <string name="settings_list_sort_name_asc">Name (A–Z)</string>
+    <string name="settings_list_sort_name_desc">Name (Z–A)</string>
+    <string name="settings_list_remember_category">Remember last category</string>
+    <string name="settings_dialog_done">Done</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">System</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_turkish">Turkish</string>
+    <string name="settings_theme_mode">Theme Mode</string>
+    <string name="settings_theme_system">System default</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_distance_unit">Distance Unit</string>
+    <string name="settings_distance_kilometers">Kilometers</string>
+    <string name="settings_distance_miles">Miles</string>
+    <string name="settings_display_units">Display Units</string>
+    <string name="settings_auto_apply_localization">Auto-Apply Localization</string>
+    <string name="settings_app_version">Spotter v1.0.0</string>
+    <string name="settings_dialog_close">Close</string>
+</resources>

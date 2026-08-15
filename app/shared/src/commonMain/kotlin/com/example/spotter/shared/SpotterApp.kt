@@ -2,6 +2,7 @@ package com.example.spotter.shared
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -16,6 +17,8 @@ import com.example.spotter.core.datastore.ThemeMode
 import com.example.spotter.core.datastore.UserSettingsRepository
 import com.example.spotter.core.designsystem.theme.SpotterTheme
 import com.example.spotter.core.navigation.NavGraphProvider
+import com.example.spotter.core.navigation.NavigationCommand
+import com.example.spotter.core.navigation.NavigationManager
 import com.example.spotter.feature.home.contract.HomeScreenDestination
 import com.example.spotter.feature.splash.contract.SplashScreenDestination
 import com.example.spotter.feature.splash.presentation.ui.SplashScreen
@@ -55,6 +58,37 @@ fun SpotterApp() {
 
     val backStack = rememberNavBackStack(spotterNavSavedStateConfiguration, SplashScreenDestination)
     val providers: List<NavGraphProvider> = getKoin().getAll()
+    val navigationManager: NavigationManager = koinInject()
+
+    LaunchedEffect(navigationManager, backStack) {
+        navigationManager.navigationCommandFlow.collect { command ->
+            when (command) {
+                is NavigationCommand.NavigateTo -> {
+                    when {
+                        command.clearBackStack -> backStack.clear()
+                        !command.addToBackStack -> backStack.removeLastOrNull()
+                    }
+                    backStack.add(command.to)
+                }
+
+                NavigationCommand.NavigateUp -> {
+                    if (backStack.size > 1) backStack.removeLastOrNull()
+                }
+
+                is NavigationCommand.Destination -> backStack.add(command)
+
+                is NavigationCommand.PopBackStackTo -> {
+                    val index = backStack.indexOfLast { it == command.to }
+                    if (index >= 0) {
+                        val targetSize = if (command.inclusive) index else index + 1
+                        while (backStack.size > targetSize) {
+                            backStack.removeLastOrNull()
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     SpotterAppEnvironment(
         languageTag = languageTag,

@@ -1,0 +1,6 @@
+<resources>
+    <string name="favorites_title">Favorites</string>
+    <string name="favorites_subtitle">%1$d saved spots</string>
+    <string name="favorites_empty">You have no favorites yet</string>
+    <string name="favorites_empty_hint">Tap the star on a spot to keep it here.</string>
+</resources>

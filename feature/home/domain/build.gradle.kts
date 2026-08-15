@@ -18,7 +18,7 @@ kotlin {
             implementation(project(":core:datastore"))
             api(project(":core:model"))
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.kotlinx.serialization.json)
+            api(libs.kotlinx.serialization.json)
 
             api(libs.koin.core)
         }

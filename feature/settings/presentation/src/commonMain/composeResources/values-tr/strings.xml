@@ -1,0 +1,30 @@
+<resources>
+    <string name="settings_title">Ayarlar</string>
+    <string name="settings_section_preferences">TERCİHLER</string>
+    <string name="settings_section_localization">YERELLEŞTİRME</string>
+    <string name="settings_list_preference">Liste Tercihi</string>
+    <string name="settings_list_default_view">Varsayılan Görünüm</string>
+    <string name="settings_list_default_view_list">Liste</string>
+    <string name="settings_list_default_view_map">Harita</string>
+    <string name="settings_list_sort_order">Sıralama</string>
+    <string name="settings_list_sort_distance">En yakın</string>
+    <string name="settings_list_sort_name_asc">İsim (A–Z)</string>
+    <string name="settings_list_sort_name_desc">İsim (Z–A)</string>
+    <string name="settings_list_remember_category">Son kategoriyi hatırla</string>
+    <string name="settings_dialog_done">Tamam</string>
+    <string name="settings_language">Dil</string>
+    <string name="settings_language_system">Sistem</string>
+    <string name="settings_language_english">İngilizce</string>
+    <string name="settings_language_turkish">Türkçe</string>
+    <string name="settings_theme_mode">Tema</string>
+    <string name="settings_theme_system">Sistem varsayılanı</string>
+    <string name="settings_theme_light">Açık</string>
+    <string name="settings_theme_dark">Koyu</string>
+    <string name="settings_distance_unit">Mesafe Birimi</string>
+    <string name="settings_distance_kilometers">Kilometre</string>
+    <string name="settings_distance_miles">Mil</string>
+    <string name="settings_display_units">Görüntü Birimleri</string>
+    <string name="settings_auto_apply_localization">Yerelleştirmeyi Otomatik Uygula</string>
+    <string name="settings_app_version">Spotter v1.0.0</string>
+    <string name="settings_dialog_close">Kapat</string>
+</resources>

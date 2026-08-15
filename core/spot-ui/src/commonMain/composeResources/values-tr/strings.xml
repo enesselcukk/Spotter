@@ -1,0 +1,23 @@
+<resources>
+    <string name="spot_unnamed">İsimsiz nokta</string>
+    <string name="spot_unknown_distance">Mesafe bilinmiyor</string>
+    <string name="spot_open_24h">24 saat açık</string>
+    <string name="spot_hours_unknown">Saatler bilinmiyor</string>
+    <string name="spot_operator">İşletmeci: %1$s</string>
+    <string name="spot_directions">Yol Tarifi</string>
+    <string name="spot_favorite">Favori</string>
+    <string name="spot_favorited">Favoride</string>
+    <string name="spot_charging_default_socket">Şarj istasyonu</string>
+    <string name="spot_fuel_default_detail">Akaryakıt istasyonu</string>
+    <string name="spot_parking_default_detail">Otopark</string>
+    <string name="spot_car_wash_default_detail">Oto yıkama</string>
+    <string name="spot_car_repair_default_detail">Tamirci</string>
+    <string name="spot_category_charging">Şarj</string>
+    <string name="spot_category_car_wash">Oto yıkama</string>
+    <string name="spot_category_parking">Otopark</string>
+    <string name="spot_category_fuel">Yakıt</string>
+    <string name="spot_category_car_repair">Tamir</string>
+    <string name="spot_tab_search">Arama</string>
+    <string name="spot_tab_favorites">Favoriler</string>
+    <string name="spot_tab_settings">Ayarlar</string>
+</resources>

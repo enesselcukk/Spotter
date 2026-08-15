@@ -35,9 +35,15 @@ kotlin {
             implementation(project(":core:presentation"))
             implementation(project(":core:datastore"))
             implementation(project(":core:navigation"))
+            implementation(project(":core:spot-ui"))
             implementation(project(":feature:home:contract"))
             implementation(project(":feature:detail:contract"))
             implementation(project(":feature:home:domain"))
+            implementation(project(":feature:map:contract"))
+            implementation(project(":feature:map:domain"))
+            implementation(project(":feature:favorites:contract"))
+            implementation(project(":feature:favorites:domain"))
+            implementation(project(":feature:settings:contract"))
             implementation(project(":app:ui-components"))
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
@@ -54,7 +60,6 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
-            implementation(libs.osmdroid.android)
             implementation(libs.androidx.activity.compose)
         }
         jvmMain.dependencies {

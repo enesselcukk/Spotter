@@ -1,5 +1,8 @@
 package com.example.spotter.feature.home.domain.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class SpotDto(
     val id: Long,
     val name: String?,

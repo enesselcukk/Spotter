@@ -1,10 +1,12 @@
 package com.example.spotter.feature.home.presentation.ui
 
+import com.example.spotter.core.spotui.SpotterTab
+
 internal interface HomeActions {
     fun onCategorySelected(category: String)
     fun onSpotSelected(spotId: Long)
-    fun onViewModeToggle()
+    fun onOpenMap()
     fun onFavoriteToggle(spotId: Long)
-    fun onBottomNavSelected(nav: HomeBottomNav)
+    fun onTabSelected(tab: SpotterTab)
     fun retry()
 }

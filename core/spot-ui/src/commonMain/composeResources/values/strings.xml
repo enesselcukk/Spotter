@@ -1,0 +1,23 @@
+<resources>
+    <string name="spot_unnamed">Unnamed spot</string>
+    <string name="spot_unknown_distance">Unknown distance</string>
+    <string name="spot_open_24h">Open 24 hours</string>
+    <string name="spot_hours_unknown">Hours unknown</string>
+    <string name="spot_operator">Operator: %1$s</string>
+    <string name="spot_directions">Directions</string>
+    <string name="spot_favorite">Favorite</string>
+    <string name="spot_favorited">Favorited</string>
+    <string name="spot_charging_default_socket">Charging station</string>
+    <string name="spot_fuel_default_detail">Fuel station</string>
+    <string name="spot_parking_default_detail">Parking area</string>
+    <string name="spot_car_wash_default_detail">Car wash</string>
+    <string name="spot_car_repair_default_detail">Repair shop</string>
+    <string name="spot_category_charging">Charging</string>
+    <string name="spot_category_car_wash">Car wash</string>
+    <string name="spot_category_parking">Parking</string>
+    <string name="spot_category_fuel">Fuel</string>
+    <string name="spot_category_car_repair">Repair</string>
+    <string name="spot_tab_search">Search</string>
+    <string name="spot_tab_favorites">Favorites</string>
+    <string name="spot_tab_settings">Settings</string>
+</resources>
