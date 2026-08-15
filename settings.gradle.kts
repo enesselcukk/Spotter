@@ -32,8 +32,8 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-include(":app:androidApp")
-include(":app:iosApp")
+include(":composeApp")
+include(":iosApp")
 include(":app:shared")
 include(":app:ui-components")
 include(":core:model")
