@@ -5,9 +5,6 @@ import kotlin.math.roundToInt
 
 object RouteFormatter {
 
-    /**
-     * Compact travel time in the style used by turn-by-turn apps: "45 sn", "12 dk", "1 sa 24 dk".
-     */
     fun formatDuration(
         seconds: Double,
         secondsSuffix: String,
@@ -26,9 +23,6 @@ object RouteFormatter {
         }
     }
 
-    /**
-     * Degrees with hemisphere letters, the format map apps show when you long press a pin.
-     */
     fun formatCoordinates(latitude: Double, longitude: Double): String {
         val latHemisphere = if (latitude >= 0) "N" else "S"
         val lonHemisphere = if (longitude >= 0) "E" else "W"

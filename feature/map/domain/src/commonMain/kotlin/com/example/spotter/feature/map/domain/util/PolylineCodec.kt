@@ -3,9 +3,6 @@ package com.example.spotter.feature.map.domain.util
 import com.example.spotter.feature.map.domain.model.RoutePoint
 import kotlin.math.pow
 
-/**
- * Decoder for the Google/OSRM encoded polyline format.
- */
 object PolylineCodec {
 
     fun decode(encoded: String, precision: Int = 5): List<RoutePoint> {

@@ -2,11 +2,9 @@ package com.example.spotter.core.designsystem.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Shared semantic colors (both modes)
 val SpotterGreen = Color(0xFF4CAF50)
 val SpotterBlue = Color(0xFF2196F3)
 
-// Dark palette
 val SpotterDarkBackground = Color(0xFF121212)
 val SpotterDarkSurface = Color(0xFF1E1E1E)
 val SpotterDarkSurfaceElevated = Color(0xFF2A2A2A)
@@ -15,7 +13,6 @@ val SpotterDarkOnSurfaceMuted = Color(0xFF9AA5B5)
 val SpotterDarkPrimary = Color(0xFFFFC107)
 val SpotterDarkOnPrimary = Color(0xFF1A2332)
 
-// Light palette (OnRoute mockup)
 val SpotterLightBackground = Color(0xFFFAF8F5)
 val SpotterLightSurface = Color(0xFFFFFFFF)
 val SpotterLightSurfaceVariant = Color(0xFFF3F4F6)
@@ -28,7 +25,6 @@ val SpotterLightOnPrimaryContainer = Color(0xFF1B3A57)
 val SpotterLightSecondary = Color(0xFF5B9BD5)
 val SpotterLightOutline = Color(0xFFE5E7EB)
 
-// Legacy aliases
 val SpotterYellow = SpotterDarkPrimary
 val SpotterYellowDark = Color(0xFFFFB300)
 val SpotterNavy = SpotterDarkBackground

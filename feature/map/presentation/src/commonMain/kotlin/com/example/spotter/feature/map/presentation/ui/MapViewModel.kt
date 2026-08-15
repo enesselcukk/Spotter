@@ -44,10 +44,6 @@ class MapViewModel(
         }
     }
 
-    /**
-     * View models are scoped above the back stack entry, so the screen re-arms itself whenever
-     * it is opened with different arguments instead of only on first composition.
-     */
     fun start(destination: MapScreenDestination) {
         if (currentDestination == destination) return
         currentDestination = destination
@@ -135,8 +131,6 @@ class MapViewModel(
                 _uiState.update { current ->
                     if (!current.isNavigating) return@update current
                     val plan = current.routePlan ?: return@update current.copy(userLocation = point)
-                    // Simulator / stale GPS can jump thousands of km away. Following that
-                    // hides the route (iOS default is San Francisco) and falsely reports arrival.
                     if (!NavigationProgressCalculator.isOnRoute(plan.geometry, point)) {
                         return@update current
                     }

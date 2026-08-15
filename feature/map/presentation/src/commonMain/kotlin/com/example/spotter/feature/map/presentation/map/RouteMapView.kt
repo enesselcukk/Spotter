@@ -29,10 +29,6 @@ enum class MapCamera {
     ZoomOut,
 }
 
-/**
- * Camera commands are carried as one-shot tokens so the platform map can distinguish two
- * identical requests in a row (two consecutive zoom-in taps, for example).
- */
 data class MapCameraCommand(
     val token: Long,
     val camera: MapCamera,

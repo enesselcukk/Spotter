@@ -266,10 +266,6 @@ private fun MapCircleButton(
     }
 }
 
-/**
- * The overlays float on top of the map, so they need their own elevation and outline to stay
- * readable over both a bright street layer and a dark one.
- */
 @Composable
 private fun Modifier.mapSurface(shape: Shape): Modifier {
     val colors = MaterialTheme.colorScheme
@@ -418,7 +414,6 @@ private fun RouteSheet(
             )
             .clip(sheetShape)
             .background(colors.surface)
-            // The sheet background bleeds behind the gesture bar, only its content is lifted above it.
             .spotterNavigationBarsPadding()
             .padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 18.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),

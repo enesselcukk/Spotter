@@ -29,7 +29,6 @@ actual class NavigationLocationTrackerImpl : NavigationLocationTracker {
         awaitClose {
             manager.stopUpdatingLocation()
             manager.delegate = null
-            // Keep the delegate strongly referenced for the life of the flow.
             delegate.hashCode()
         }
     }

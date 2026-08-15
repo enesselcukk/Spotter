@@ -7,11 +7,6 @@ import io.ktor.client.request.get
 import io.ktor.client.request.url
 import io.ktor.client.statement.HttpResponse
 
-/**
- * Thin client for the public OSRM routing service. It returns the road-following geometry
- * plus turn-by-turn steps, which is what makes the drawn route match what Google Maps or
- * Yandex Maps would show instead of a straight line between two pins.
- */
 class RoutingApi(
     private val httpClient: HttpClient,
 ) {
