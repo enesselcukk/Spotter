@@ -9,7 +9,8 @@
     <string name="home_error_rate_limit">Too many requests. Please wait a moment.</string>
     <string name="home_error_unavailable">Service temporarily unavailable.</string>
     <string name="home_retry">Retry</string>
-    <string name="home_map_view">Map view</string>
+    <string name="home_map_view">Map View</string>
+    <string name="home_search_placeholder">Search places, charging, repair...</string>
     <string name="home_location_loading">Getting location…</string>
     <string name="home_location_current">Current location</string>
     <string name="home_location_fallback">Default area</string>

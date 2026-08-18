@@ -13,6 +13,9 @@ import com.example.spotter.core.presentation.CoreViewModel
 import com.example.spotter.core.spotui.SpotterTab
 import com.example.spotter.feature.favorites.contract.FavoritesScreenDestination
 import com.example.spotter.feature.home.contract.HomeScreenDestination
+import com.example.spotter.feature.home.domain.model.SpotSearchQuery
+import com.example.spotter.feature.map.contract.MapScreenDestination
+import com.example.spotter.feature.map.domain.repository.MapSpotsHandoff
 import com.example.spotter.feature.settings.contract.SettingsScreenDestination
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +26,7 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val userSettingsRepository: UserSettingsRepository,
+    private val mapSpotsHandoff: MapSpotsHandoff,
     private val navigationManager: NavigationManager,
 ) : CoreViewModel() {
 
@@ -68,9 +72,14 @@ class SettingsViewModel(
 
     fun onTabSelected(tab: SpotterTab) {
         if (tab == SpotterTab.Settings) return
+        if (tab == SpotterTab.Map) {
+            openMap()
+            return
+        }
 
         val target = when (tab) {
             SpotterTab.Search -> HomeScreenDestination
+            SpotterTab.Map -> return
             SpotterTab.Favorites -> FavoritesScreenDestination
             SpotterTab.Settings -> SettingsScreenDestination
         }
@@ -137,5 +146,19 @@ class SettingsViewModel(
         viewModelScope.launch {
             userSettingsRepository.setAutoApplyLocalization(enabled)
         }
+    }
+
+    private fun openMap() {
+        val fallback = SpotSearchQuery.fallback()
+        val focusedId = mapSpotsHandoff.peek().firstOrNull()?.id
+        navigationManager.navigate(
+            NavigationCommand.NavigateTo(
+                to = MapScreenDestination(
+                    userLatitude = fallback.latitude,
+                    userLongitude = fallback.longitude,
+                    focusedSpotId = focusedId,
+                ),
+            ),
+        )
     }
 }

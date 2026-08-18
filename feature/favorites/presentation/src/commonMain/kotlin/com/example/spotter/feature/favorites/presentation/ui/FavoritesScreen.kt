@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,14 +26,18 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.spotter.core.designsystem.component.spotterStatusBarsPadding
 import com.example.spotter.core.spotui.SpotterTab
+import com.example.spotter.core.spotui.component.CarbonFiberBackground
+import com.example.spotter.core.spotui.component.SpotCategoryChips
 import com.example.spotter.core.spotui.component.SpotDetailCard
+import com.example.spotter.core.spotui.component.SpotSearchBar
+import com.example.spotter.core.spotui.component.SpotSearchSuggestionsPanel
 import com.example.spotter.core.spotui.component.SpotterBottomBar
 import com.example.spotter.core.spotui.platform.rememberDirectionsLauncher
 import com.example.spotter.feature.favorites.presentation.generated.resources.Res
 import com.example.spotter.feature.favorites.presentation.generated.resources.favorites_empty
+import com.example.spotter.feature.favorites.presentation.generated.resources.favorites_empty_category
 import com.example.spotter.feature.favorites.presentation.generated.resources.favorites_empty_hint
-import com.example.spotter.feature.favorites.presentation.generated.resources.favorites_subtitle
-import com.example.spotter.feature.favorites.presentation.generated.resources.favorites_title
+import com.example.spotter.feature.favorites.presentation.generated.resources.favorites_search_placeholder
 import com.example.spotter.feature.home.domain.model.SpotDto
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -44,80 +49,91 @@ fun FavoritesScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val launchDirections = rememberDirectionsLauncher()
     val colors = MaterialTheme.colorScheme
+    val isDark = colors.background.luminance() < 0.5f
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.background)
-            .spotterStatusBarsPadding(),
-    ) {
-        FavoritesHeader(count = uiState.favorites.size)
+    CarbonFiberBackground(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (isDark) Modifier else Modifier.background(colors.background))
+                .spotterStatusBarsPadding(),
+        ) {
+            SpotSearchBar(
+                query = uiState.searchText,
+                onQueryChange = viewModel::onSearchTextChanged,
+                placeholder = stringResource(Res.string.favorites_search_placeholder),
+                onFocusChanged = viewModel::onSearchFocusChanged,
+                onClear = viewModel::onSearchClear,
+            )
 
-        FavoritesList(
-            favorites = uiState.favorites,
-            onDirections = launchDirections,
-            onFavoriteToggle = viewModel::onFavoriteToggle,
-            modifier = Modifier.weight(1f),
-        )
+            if (uiState.isSearchActive) {
+                SpotSearchSuggestionsPanel(
+                    suggestions = uiState.searchSuggestions,
+                    onSuggestionSelected = viewModel::onSearchSuggestionSelected,
+                )
+                Box(modifier = Modifier.weight(1f))
+            } else {
+                Spacer(modifier = Modifier.height(12.dp))
+                SpotCategoryChips(
+                    categories = uiState.categories,
+                    selectedCategory = uiState.selectedCategory,
+                    onCategorySelected = viewModel::onCategorySelected,
+                )
 
-        SpotterBottomBar(
-            selected = SpotterTab.Favorites,
-            onSelected = viewModel::onTabSelected,
-        )
-    }
-}
+                FavoritesList(
+                    favorites = uiState.filteredFavorites,
+                    totalCount = uiState.favorites.size,
+                    onDirections = launchDirections,
+                    onFavoriteToggle = viewModel::onFavoriteToggle,
+                    modifier = Modifier.weight(1f),
+                )
+            }
 
-@Composable
-private fun FavoritesHeader(count: Int) {
-    val colors = MaterialTheme.colorScheme
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 8.dp),
-    ) {
-        Text(
-            text = stringResource(Res.string.favorites_title),
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 34.sp,
-            ),
-            color = colors.onBackground,
-        )
-        Text(
-            text = stringResource(Res.string.favorites_subtitle, count),
-            color = colors.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-        )
+            SpotterBottomBar(
+                selected = SpotterTab.Favorites,
+                onSelected = viewModel::onTabSelected,
+            )
+        }
     }
 }
 
 @Composable
 private fun FavoritesList(
     favorites: List<SpotDto>,
+    totalCount: Int,
     onDirections: (Double, Double, String?) -> Unit,
     onFavoriteToggle: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (favorites.isEmpty()) {
-        FavoritesEmptyState(modifier = modifier)
-        return
-    }
+    when {
+        favorites.isEmpty() && totalCount == 0 -> {
+            FavoritesEmptyState(modifier = modifier)
+        }
 
-    LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        itemsIndexed(favorites, key = { _, spot -> spot.id }) { index, spot ->
-            SpotDetailCard(
-                spot = spot,
-                isFavorite = true,
-                markerIndex = index + 1,
-                onDirections = onDirections,
-                onFavoriteToggle = onFavoriteToggle,
-                highlighted = true,
+        favorites.isEmpty() -> {
+            FavoritesMessage(
+                text = stringResource(Res.string.favorites_empty_category),
+                modifier = modifier,
             )
+        }
+
+        else -> {
+            LazyColumn(
+                modifier = modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                itemsIndexed(favorites, key = { _, spot -> spot.id }) { index, spot ->
+                    SpotDetailCard(
+                        spot = spot,
+                        isFavorite = true,
+                        markerIndex = index + 1,
+                        onDirections = onDirections,
+                        onFavoriteToggle = onFavoriteToggle,
+                        highlighted = true,
+                    )
+                }
+            }
         }
     }
 }
@@ -133,7 +149,7 @@ private fun FavoritesEmptyState(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = "☆", fontSize = 42.sp, color = colors.onSurfaceVariant)
+            Text(text = "♡", fontSize = 42.sp, color = colors.onSurfaceVariant)
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = stringResource(Res.string.favorites_empty),
@@ -148,5 +164,22 @@ private fun FavoritesEmptyState(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
+    }
+}
+
+@Composable
+private fun FavoritesMessage(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    val colors = MaterialTheme.colorScheme
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text = text, color = colors.onSurfaceVariant)
     }
 }

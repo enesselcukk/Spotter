@@ -10,7 +10,10 @@ import com.example.spotter.core.navigation.NavigationManager
 import com.example.spotter.core.navigation.switchTab
 import com.example.spotter.core.presentation.CoreViewModel
 import com.example.spotter.core.spotui.SpotCategories
+import com.example.spotter.core.spotui.SpotSearchSuggestion
+import com.example.spotter.core.spotui.SpotSearchSuggestionKind
 import com.example.spotter.core.spotui.SpotterTab
+import com.example.spotter.core.spotui.filterByCategoryAndSearch
 import com.example.spotter.feature.favorites.contract.FavoritesScreenDestination
 import com.example.spotter.feature.favorites.domain.usecase.ObserveFavoriteIdsUseCase
 import com.example.spotter.feature.favorites.domain.usecase.ToggleFavoriteUseCase
@@ -49,6 +52,7 @@ class HomeViewModel(
     private var rememberLastCategory = true
     private var storedCategory = SpotCategories.CHARGING
     private var autoOpenedMap = false
+    private val recentSearchQueries = mutableListOf<String>()
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -69,8 +73,77 @@ class HomeViewModel(
         updateSuccess { current ->
             current.copy(
                 selectedCategory = category,
-                selectedSpotId = filterSpots(current.spots, category).firstOrNull()?.id,
+                selectedSpotId = filterSpots(current.spots, category, current.searchText).firstOrNull()?.id,
             )
+        }
+    }
+
+    override fun onSearchTextChanged(query: String) {
+        updateSuccess { current ->
+            current.copy(
+                searchText = query,
+                selectedSpotId = filterSpots(current.spots, current.selectedCategory, query).firstOrNull()?.id,
+            )
+        }
+    }
+
+    override fun onSearchFocusChanged(active: Boolean) {
+        updateSuccess { it.copy(isSearchActive = active) }
+    }
+
+    override fun onSearchClear() {
+        updateSuccess { current ->
+            current.copy(
+                searchText = "",
+                selectedSpotId = filterSpots(current.spots, current.selectedCategory, "").firstOrNull()?.id,
+            )
+        }
+    }
+
+    override fun onSearchSuggestionSelected(suggestion: SpotSearchSuggestion) {
+        when (suggestion.kind) {
+            SpotSearchSuggestionKind.Spot -> {
+                val spot = currentSuccess?.spots?.find { it.id == suggestion.spotId } ?: return
+                rememberRecentSearch(suggestion.label)
+                updateSuccess { current ->
+                    current.copy(
+                        searchText = suggestion.label,
+                        selectedCategory = spot.amenity ?: current.selectedCategory,
+                        selectedSpotId = spot.id,
+                        isSearchActive = false,
+                    )
+                }
+            }
+
+            SpotSearchSuggestionKind.Recent -> {
+                updateSuccess { current ->
+                    current.copy(
+                        searchText = suggestion.label,
+                        isSearchActive = false,
+                        selectedSpotId = filterSpots(
+                            current.spots,
+                            current.selectedCategory,
+                            suggestion.label,
+                        ).firstOrNull()?.id,
+                    )
+                }
+            }
+
+            SpotSearchSuggestionKind.Category -> {
+                val category = suggestion.category ?: return
+                if (rememberLastCategory) {
+                    viewModelScope.launch { userSettingsRepository.setLastSelectedCategory(category) }
+                }
+                rememberRecentSearch(suggestion.label)
+                updateSuccess { current ->
+                    current.copy(
+                        searchText = suggestion.label,
+                        selectedCategory = category,
+                        selectedSpotId = filterSpots(current.spots, category, suggestion.label).firstOrNull()?.id,
+                        isSearchActive = false,
+                    )
+                }
+            }
         }
     }
 
@@ -102,6 +175,10 @@ class HomeViewModel(
     override fun onTabSelected(tab: SpotterTab) {
         val target = when (tab) {
             SpotterTab.Search -> return
+            SpotterTab.Map -> {
+                onOpenMap()
+                return
+            }
             SpotterTab.Favorites -> FavoritesScreenDestination
             SpotterTab.Settings -> SettingsScreenDestination
         }
@@ -210,8 +287,9 @@ class HomeViewModel(
         val category = resolveCategoryWithResults(
             spots = sortedSpots,
             preferred = preferredCategory ?: current?.selectedCategory ?: preferredStoredCategory(),
+            searchText = current?.searchText.orEmpty(),
         )
-        val filtered = filterSpots(sortedSpots, category)
+        val filtered = filterSpots(sortedSpots, category, current?.searchText.orEmpty())
 
         return HomeUiState.Success(
             spots = sortedSpots,
@@ -225,24 +303,41 @@ class HomeViewModel(
             userLatitude = searchQuery.latitude,
             userLongitude = searchQuery.longitude,
             isLoadingSpots = isLoadingSpots,
+            searchText = current?.searchText.orEmpty(),
+            isSearchActive = current?.isSearchActive ?: false,
+            recentSearchQueries = recentSearchQueries.toList(),
         )
     }
 
-    private fun resolveCategoryWithResults(spots: List<SpotDto>, preferred: String): String {
-        if (filterSpots(spots, preferred).isNotEmpty()) return preferred
-        return SpotCategories.ids.firstOrNull { filterSpots(spots, it).isNotEmpty() } ?: preferred
+    private fun resolveCategoryWithResults(
+        spots: List<SpotDto>,
+        preferred: String,
+        searchText: String,
+    ): String {
+        if (filterSpots(spots, preferred, searchText).isNotEmpty()) return preferred
+        return SpotCategories.ids.firstOrNull { filterSpots(spots, it, searchText).isNotEmpty() } ?: preferred
     }
 
     private fun preferredStoredCategory(): String = storedCategory
         .takeIf { rememberLastCategory && it in HomeUiState.defaultCategories }
         ?: SpotCategories.CHARGING
 
-    private fun filterSpots(spots: List<SpotDto>, category: String): List<SpotDto> =
-        spots.filter { it.amenity == category }
+    private fun filterSpots(spots: List<SpotDto>, category: String, searchText: String): List<SpotDto> =
+        spots.filterByCategoryAndSearch(category, searchText)
 
     private inline fun updateSuccess(transform: (HomeUiState.Success) -> HomeUiState.Success) {
         _uiState.update { state ->
             if (state is HomeUiState.Success) transform(state) else state
+        }
+    }
+
+    private fun rememberRecentSearch(label: String) {
+        val trimmed = label.trim()
+        if (trimmed.isBlank()) return
+        recentSearchQueries.remove(trimmed)
+        recentSearchQueries.add(0, trimmed)
+        while (recentSearchQueries.size > 5) {
+            recentSearchQueries.removeAt(recentSearchQueries.lastIndex)
         }
     }
 

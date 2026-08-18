@@ -2,5 +2,7 @@
     <string name="favorites_title">Favoriler</string>
     <string name="favorites_subtitle">%1$d kayıtlı nokta</string>
     <string name="favorites_empty">Henüz favoriniz yok</string>
-    <string name="favorites_empty_hint">Bir noktayı burada tutmak için yıldıza dokunun.</string>
+    <string name="favorites_empty_hint">Bir noktayı burada tutmak için Favoriye ekle butonuna dokunun.</string>
+    <string name="favorites_search_placeholder">Favorilerde ara...</string>
+    <string name="favorites_empty_category">Bu kategoride favori yok.</string>
 </resources>

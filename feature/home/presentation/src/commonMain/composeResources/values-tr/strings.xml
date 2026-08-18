@@ -9,7 +9,8 @@
     <string name="home_error_rate_limit">Çok fazla istek. Lütfen biraz bekleyin.</string>
     <string name="home_error_unavailable">Servis geçici olarak kullanılamıyor.</string>
     <string name="home_retry">Tekrar dene</string>
-    <string name="home_map_view">Harita görünümü</string>
+    <string name="home_map_view">Harita Görünümü</string>
+    <string name="home_search_placeholder">Yer, şarj, tamir ara...</string>
     <string name="home_location_loading">Konum alınıyor…</string>
     <string name="home_location_current">Mevcut konum</string>
     <string name="home_location_fallback">Varsayılan bölge</string>

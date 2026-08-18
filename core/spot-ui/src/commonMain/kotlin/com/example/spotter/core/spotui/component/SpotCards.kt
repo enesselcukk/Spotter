@@ -16,10 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,25 +24,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.spotter.core.designsystem.theme.SpotterBlue
+import com.example.spotter.core.designsystem.theme.SpotterDarkCardButton
 import com.example.spotter.core.designsystem.theme.SpotterDarkSurfaceElevated
 import com.example.spotter.core.designsystem.theme.SpotterGreen
 import com.example.spotter.core.designsystem.theme.SpotterYellow
 import com.example.spotter.core.spotui.SpotCategories
 import com.example.spotter.core.spotui.generated.resources.Res
+import com.example.spotter.core.spotui.generated.resources.spot_add_to_favorite
 import com.example.spotter.core.spotui.generated.resources.spot_directions
-import com.example.spotter.core.spotui.generated.resources.spot_favorite
 import com.example.spotter.core.spotui.generated.resources.spot_favorited
 import com.example.spotter.core.spotui.spotCategoryLabel
 import com.example.spotter.core.spotui.spotDisplayName
 import com.example.spotter.core.spotui.spotDistanceLabel
 import com.example.spotter.core.spotui.spotOpeningHoursLabel
-import com.example.spotter.core.spotui.spotOperatorLabel
 import com.example.spotter.core.spotui.spotSocketLabel
 import com.example.spotter.feature.home.domain.model.SpotDto
 import org.jetbrains.compose.resources.stringResource
@@ -64,149 +63,120 @@ fun SpotDetailCard(
 ) {
     val colors = MaterialTheme.colorScheme
     val isDark = colors.background.luminance() < 0.5f
-    val cardShape = RoundedCornerShape(20.dp)
+    val cardShape = RoundedCornerShape(18.dp)
     val borderColor = when {
-        !highlighted -> colors.outline.copy(alpha = if (isDark) 0.25f else 0.4f)
-        isDark -> SpotterBlue.copy(alpha = 0.45f)
-        else -> colors.secondary.copy(alpha = 0.5f)
+        highlighted && isDark -> Color.White.copy(alpha = 0.12f)
+        isDark -> Color.White.copy(alpha = 0.06f)
+        highlighted -> colors.outline.copy(alpha = 0.55f)
+        else -> colors.outline.copy(alpha = 0.35f)
+    }
+    val socket = spotSocketLabel(spot)
+    val favoriteLabel = if (isFavorite) {
+        stringResource(Res.string.spot_favorited)
+    } else {
+        stringResource(Res.string.spot_add_to_favorite)
     }
 
-    Card(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .border(
-                width = if (highlighted) 1.5.dp else 1.dp,
-                color = borderColor,
-                shape = cardShape,
-            ),
-        shape = cardShape,
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDark) SpotterDarkSurfaceElevated else colors.surface,
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            .clip(cardShape)
+            .background(if (isDark) SpotterDarkSurfaceElevated else colors.surface)
+            .border(1.dp, borderColor, cardShape)
+            .padding(14.dp),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                SpotBrandBadge(
-                    spot = spot,
-                    modifier = Modifier.size(48.dp),
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            SpotBrandBadge(
+                spot = spot,
+                isFavorite = isFavorite,
+                modifier = Modifier.size(44.dp),
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = spotDisplayName(spot),
+                    color = colors.onSurface,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
+                if (!socket.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(3.dp))
                     Text(
-                        text = spotDisplayName(spot),
-                        color = colors.onSurface,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
+                        text = "⚡ $socket",
+                        color = colors.onSurfaceVariant,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SpotMapPreview(
+                markerIndex = markerIndex,
+                onClick = onMapPreviewClick?.let { callback -> { callback(spot.id) } },
+                modifier = Modifier
+                    .weight(0.42f)
+                    .height(86.dp),
+            )
+            Column(
+                modifier = Modifier.weight(0.58f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    text = spotDistanceLabel(spot),
+                    color = colors.onSurface,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp,
+                )
+                Text(
+                    text = spotOpeningHoursLabel(spot),
+                    color = SpotterGreen,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+                if (!socket.isNullOrBlank()) {
+                    Text(
+                        text = socket,
+                        color = colors.onSurfaceVariant,
+                        fontSize = 12.sp,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = spotDistanceLabel(spot),
-                            color = colors.onSurfaceVariant,
-                            fontSize = 13.sp,
-                        )
-                        Text(
-                            text = "  •  ",
-                            color = colors.onSurfaceVariant,
-                        )
-                        Text(
-                            text = spotOpeningHoursLabel(spot),
-                            color = SpotterGreen,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
                 }
             }
+        }
 
-            if (highlighted) {
-                Spacer(modifier = Modifier.height(14.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    SpotMapPreview(
-                        markerIndex = markerIndex,
-                        onClick = onMapPreviewClick?.let { callback -> { callback(spot.id) } },
-                        modifier = Modifier
-                            .weight(0.42f)
-                            .height(78.dp),
-                    )
-                    Column(modifier = Modifier.weight(0.58f)) {
-                        spotSocketLabel(spot)?.let { socket ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = "🔌", fontSize = 14.sp)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = socket,
-                                    color = SpotterBlue,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                        }
-                        spotOperatorLabel(spot)?.let { operator ->
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = operator,
-                                color = colors.onSurfaceVariant,
-                                fontSize = 12.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
-                }
-            }
+        Spacer(modifier = Modifier.height(12.dp))
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Button(
-                    onClick = { onDirections(spot.lat, spot.lon, spot.name) },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = SpotterBlue,
-                        contentColor = Color.White,
-                    ),
-                ) {
-                    Text(
-                        text = "➤ ${stringResource(Res.string.spot_directions)}",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                    )
-                }
-                Button(
-                    onClick = { onFavoriteToggle(spot.id) },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isDark) colors.background else colors.surfaceVariant,
-                        contentColor = colors.onSurface,
-                    ),
-                ) {
-                    Text(
-                        text = if (isFavorite) {
-                            "${stringResource(Res.string.spot_favorited)} ★"
-                        } else {
-                            "${stringResource(Res.string.spot_favorite)} ☆"
-                        },
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp,
-                        color = if (isFavorite) SpotterYellow else colors.onSurface,
-                    )
-                }
-            }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            SpotCardActionButton(
+                label = stringResource(Res.string.spot_directions),
+                icon = SpotCardActionIcon.Navigate,
+                onClick = { onDirections(spot.lat, spot.lon, spot.name) },
+                isDark = isDark,
+                modifier = Modifier.weight(1f),
+            )
+            SpotCardActionButton(
+                label = favoriteLabel,
+                icon = SpotCardActionIcon.Favorite,
+                filled = isFavorite,
+                onClick = { onFavoriteToggle(spot.id) },
+                isDark = isDark,
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }
@@ -257,31 +227,129 @@ fun SpotCompactItem(
 }
 
 @Composable
+private fun SpotCardActionButton(
+    label: String,
+    icon: SpotCardActionIcon,
+    onClick: () -> Unit,
+    isDark: Boolean,
+    modifier: Modifier = Modifier,
+    filled: Boolean = false,
+) {
+    val colors = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(14.dp)
+    val background = if (isDark) SpotterDarkCardButton else colors.surfaceVariant
+    val content = if (isDark) Color.White else colors.onSurface
+
+    Row(
+        modifier = modifier
+            .height(44.dp)
+            .clip(shape)
+            .background(background)
+            .border(
+                width = 1.dp,
+                color = if (isDark) Color.White.copy(alpha = 0.06f) else colors.outline.copy(alpha = 0.35f),
+                shape = shape,
+            )
+            .clickable(onClick = onClick),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SpotCardActionIconView(icon = icon, tint = content, filled = filled)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = label,
+            color = content,
+            fontWeight = FontWeight.Medium,
+            fontSize = 13.sp,
+        )
+    }
+}
+
+private enum class SpotCardActionIcon {
+    Navigate,
+    Favorite,
+}
+
+@Composable
+private fun SpotCardActionIconView(
+    icon: SpotCardActionIcon,
+    tint: Color,
+    modifier: Modifier = Modifier,
+    filled: Boolean = false,
+) {
+    Canvas(modifier = modifier.size(16.dp)) {
+        val stroke = Stroke(width = 1.8f, cap = StrokeCap.Round)
+        when (icon) {
+            SpotCardActionIcon.Navigate -> {
+                val path = Path().apply {
+                    moveTo(size.width * 0.18f, size.height * 0.82f)
+                    lineTo(size.width * 0.18f, size.height * 0.18f)
+                    lineTo(size.width * 0.86f, size.height * 0.5f)
+                    close()
+                }
+                drawPath(path, color = tint, style = Fill)
+            }
+
+            SpotCardActionIcon.Favorite -> {
+                val w = size.width
+                val h = size.height
+                val path = Path().apply {
+                    moveTo(w * 0.5f, h * 0.78f)
+                    cubicTo(
+                        w * 0.18f, h * 0.58f,
+                        w * 0.14f, h * 0.28f,
+                        w * 0.5f, h * 0.4f,
+                    )
+                    cubicTo(
+                        w * 0.86f, h * 0.28f,
+                        w * 0.82f, h * 0.58f,
+                        w * 0.5f, h * 0.78f,
+                    )
+                    close()
+                }
+                if (filled) {
+                    drawPath(path, color = tint, style = Fill)
+                } else {
+                    drawPath(path, color = tint, style = stroke)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun SpotBrandBadge(
     spot: SpotDto,
     modifier: Modifier = Modifier,
+    isFavorite: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val isDark = colors.background.luminance() < 0.5f
-    val initials = spotDisplayName(spot)
-        .split(" ")
-        .take(2)
-        .mapNotNull { it.firstOrNull()?.uppercaseChar()?.toString() }
-        .joinToString("")
-        .ifBlank { SpotCategories.icon(spot.amenity ?: SpotCategories.ALL) }
 
     Box(
         modifier = modifier
             .clip(CircleShape)
-            .background(if (isDark) colors.background else colors.primaryContainer),
+            .background(if (isDark) Color(0xFF111111) else colors.primaryContainer)
+            .border(
+                width = 1.dp,
+                color = if (isDark) Color.White.copy(alpha = 0.08f) else colors.outline.copy(alpha = 0.3f),
+                shape = CircleShape,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = initials.take(2),
-            color = if (isDark) SpotterYellow else colors.onPrimaryContainer,
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
+            text = SpotCategories.icon(spot.amenity ?: SpotCategories.ALL),
+            fontSize = 18.sp,
         )
+        if (isFavorite) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(SpotterYellow),
+            )
+        }
     }
 }
 
@@ -291,13 +359,14 @@ private fun SpotMapPreview(
     onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    val gridColor = Color(0xFF2E3A4A)
-    val lineColor = Color(0xFF3D4F63)
+    val land = Color(0xFF1A2228)
+    val road = Color(0xFF3A4650)
+    val water = Color(0xFF24343C)
 
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(gridColor)
+            .background(land)
             .then(
                 if (onClick != null) {
                     Modifier.clickable(onClick = onClick)
@@ -307,22 +376,30 @@ private fun SpotMapPreview(
             ),
     ) {
         Canvas(modifier = Modifier.matchParentSize()) {
-            val step = size.width / 5f
-            var x = step
-            while (x < size.width) {
-                drawLine(lineColor, Offset(x, 0f), Offset(x, size.height), strokeWidth = 1f)
-                x += step
-            }
-            var y = size.height / 4f
-            while (y < size.height) {
-                drawLine(lineColor, Offset(0f, y), Offset(size.width, y), strokeWidth = 1f)
-                y += size.height / 4f
-            }
+            drawRect(water, topLeft = Offset(size.width * 0.62f, size.height * 0.55f), size = size / 2f)
+            drawLine(
+                color = road,
+                start = Offset(0f, size.height * 0.32f),
+                end = Offset(size.width, size.height * 0.28f),
+                strokeWidth = 5f,
+            )
+            drawLine(
+                color = road,
+                start = Offset(size.width * 0.28f, 0f),
+                end = Offset(size.width * 0.42f, size.height),
+                strokeWidth = 4f,
+            )
+            drawLine(
+                color = road,
+                start = Offset(0f, size.height * 0.72f),
+                end = Offset(size.width, size.height * 0.58f),
+                strokeWidth = 3.5f,
+            )
         }
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(28.dp)
+                .size(26.dp)
                 .clip(CircleShape)
                 .background(SpotterYellow),
             contentAlignment = Alignment.Center,
@@ -331,7 +408,7 @@ private fun SpotMapPreview(
                 text = markerIndex.toString(),
                 color = Color.Black,
                 fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
+                fontSize = 12.sp,
             )
         }
     }

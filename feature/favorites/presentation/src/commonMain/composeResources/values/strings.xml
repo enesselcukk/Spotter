@@ -2,5 +2,7 @@
     <string name="favorites_title">Favorites</string>
     <string name="favorites_subtitle">%1$d saved spots</string>
     <string name="favorites_empty">You have no favorites yet</string>
-    <string name="favorites_empty_hint">Tap the star on a spot to keep it here.</string>
+    <string name="favorites_empty_hint">Tap Add to Favorite on a spot to keep it here.</string>
+    <string name="favorites_search_placeholder">Search favorites...</string>
+    <string name="favorites_empty_category">No favorites in this category.</string>
 </resources>

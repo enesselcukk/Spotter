@@ -2,16 +2,20 @@ package com.example.spotter.core.designsystem.theme
 
 import androidx.compose.ui.graphics.Color
 
-val SpotterGreen = Color(0xFF4CAF50)
-val SpotterBlue = Color(0xFF2196F3)
+val SpotterGreen = Color(0xFF3DDC84)
+val SpotterBlue = Color(0xFF3B9EFF)
 
-val SpotterDarkBackground = Color(0xFF121212)
-val SpotterDarkSurface = Color(0xFF1E1E1E)
-val SpotterDarkSurfaceElevated = Color(0xFF2A2A2A)
-val SpotterDarkOnSurface = Color(0xFFE8EAED)
-val SpotterDarkOnSurfaceMuted = Color(0xFF9AA5B5)
+val SpotterDarkBackground = Color(0xFF0C0C0C)
+val SpotterDarkSurface = Color(0xFF161616)
+val SpotterDarkSurfaceElevated = Color(0xFF1C1C1C)
+val SpotterDarkOnSurface = Color(0xFFF2F2F2)
+val SpotterDarkOnSurfaceMuted = Color(0xFF9A9A9A)
 val SpotterDarkPrimary = Color(0xFFFFC107)
 val SpotterDarkOnPrimary = Color(0xFF1A2332)
+val SpotterDarkSearch = Color(0xFF141414)
+val SpotterDarkChip = Color(0xFF1A1A1A)
+val SpotterDarkCardButton = Color(0xFF2B2B2B)
+val SpotterMapViewFab = Color(0xFFD9D9D9)
 
 val SpotterLightBackground = Color(0xFFFAF8F5)
 val SpotterLightSurface = Color(0xFFFFFFFF)
