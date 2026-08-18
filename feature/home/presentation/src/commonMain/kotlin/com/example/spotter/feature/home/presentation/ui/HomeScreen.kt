@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -32,11 +30,11 @@ import com.example.spotter.core.designsystem.theme.SpotterBlue
 import com.example.spotter.core.spotui.SpotterTab
 import com.example.spotter.core.spotui.component.CarbonFiberBackground
 import com.example.spotter.core.spotui.component.SpotCategoryChips
-import com.example.spotter.core.spotui.component.SpotDetailCard
 import com.example.spotter.core.spotui.component.SpotSearchBar
 import com.example.spotter.core.spotui.component.SpotSearchSuggestionsPanel
+import com.example.spotter.core.spotui.component.SpotSpotsList
 import com.example.spotter.core.spotui.component.SpotterBottomBar
-import com.example.spotter.core.spotui.platform.rememberDirectionsLauncher
+import com.example.spotter.core.datastore.DefaultHomeViewMode
 import com.example.spotter.feature.home.domain.model.SpotDto
 import com.example.spotter.feature.home.presentation.generated.resources.Res
 import com.example.spotter.feature.home.presentation.generated.resources.home_empty_category
@@ -56,7 +54,6 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val launchDirections = rememberDirectionsLauncher()
     val colors = MaterialTheme.colorScheme
     val isDark = colors.background.luminance() < 0.5f
 
@@ -101,7 +98,7 @@ fun HomeScreen(
                     HomeSearchContent(
                         state = state,
                         actions = viewModel,
-                        onDirections = launchDirections,
+                        onNavigate = viewModel::onNavigateToSpot,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -119,7 +116,7 @@ fun HomeScreen(
 private fun HomeSearchContent(
     state: HomeUiState.Success,
     actions: HomeActions,
-    onDirections: (Double, Double, String?) -> Unit,
+    onNavigate: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -151,8 +148,9 @@ private fun HomeSearchContent(
                 isLoadingSpots = state.isLoadingSpots,
                 selectedSpotId = state.selectedSpotId,
                 favoriteIds = state.favoriteIds,
+                listLayoutMode = state.listLayoutMode,
                 onFavoriteToggle = actions::onFavoriteToggle,
-                onDirections = onDirections,
+                onNavigate = onNavigate,
                 onRetry = actions::retry,
                 modifier = Modifier.weight(1f),
             )
@@ -167,8 +165,9 @@ private fun HomeListContent(
     isLoadingSpots: Boolean,
     selectedSpotId: Long?,
     favoriteIds: Set<Long>,
+    listLayoutMode: DefaultHomeViewMode,
     onFavoriteToggle: (Long) -> Unit,
-    onDirections: (Double, Double, String?) -> Unit,
+    onNavigate: (Long) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -209,22 +208,15 @@ private fun HomeListContent(
         return
     }
 
-    LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        itemsIndexed(spots, key = { _, spot -> spot.id }) { index, spot ->
-            SpotDetailCard(
-                spot = spot,
-                isFavorite = spot.id in favoriteIds,
-                markerIndex = index + 1,
-                onDirections = onDirections,
-                onFavoriteToggle = onFavoriteToggle,
-                highlighted = spot.id == selectedSpotId,
-            )
-        }
-    }
+    SpotSpotsList(
+        spots = spots,
+        layoutMode = listLayoutMode,
+        favoriteIds = favoriteIds,
+        selectedSpotId = selectedSpotId,
+        onNavigate = onNavigate,
+        onFavoriteToggle = onFavoriteToggle,
+        modifier = modifier,
+    )
 }
 
 @Composable

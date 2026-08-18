@@ -48,10 +48,9 @@ class HomeViewModel(
 
     private var searchQuery = SpotSearchQuery.fallback()
     private var listSortOrder = ListSortOrder.DISTANCE
-    private var defaultHomeViewMode = DefaultHomeViewMode.LIST
+    private var listLayoutMode = DefaultHomeViewMode.LIST
     private var rememberLastCategory = true
     private var storedCategory = SpotCategories.CHARGING
-    private var autoOpenedMap = false
     private val recentSearchQueries = mutableListOf<String>()
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
@@ -151,7 +150,23 @@ class HomeViewModel(
         updateSuccess { it.copy(selectedSpotId = spotId) }
     }
 
-    override fun onOpenMap() {
+    override fun onNavigateToSpot(spotId: Long) {
+        val current = currentSuccess ?: return
+
+        mapSpotsHandoff.publish(current.spots)
+        navigationManager.navigate(
+            NavigationCommand.NavigateTo(
+                to = MapScreenDestination(
+                    userLatitude = current.userLatitude,
+                    userLongitude = current.userLongitude,
+                    focusedSpotId = spotId,
+                    category = current.selectedCategory,
+                ),
+            ),
+        )
+    }
+
+    private fun onOpenMap() {
         val current = currentSuccess ?: return
 
         mapSpotsHandoff.publish(current.spots)
@@ -212,7 +227,7 @@ class HomeViewModel(
                 ListPreferenceSnapshot(sortOrder, viewMode, rememberCategory, lastCategory)
             }.collect { snapshot ->
                 listSortOrder = snapshot.sortOrder
-                defaultHomeViewMode = snapshot.defaultViewMode
+                listLayoutMode = snapshot.defaultViewMode
                 rememberLastCategory = snapshot.rememberLastCategory
                 storedCategory = snapshot.lastSelectedCategory
 
@@ -233,8 +248,6 @@ class HomeViewModel(
         _uiState.value = buildSuccess(preload.spots)
         if (preload.spots.isEmpty() || preload.errorMessage != null) {
             loadSpots()
-        } else {
-            maybeAutoOpenMap()
         }
     }
 
@@ -264,17 +277,8 @@ class HomeViewModel(
                             ?: currentSuccess?.copy(isLoadingSpots = false)
                             ?: HomeUiState.Error(message = result.error.message)
                     }
-                    maybeAutoOpenMap()
                 }
         }
-    }
-
-    private fun maybeAutoOpenMap() {
-        if (autoOpenedMap || defaultHomeViewMode != DefaultHomeViewMode.MAP) return
-        if (currentSuccess?.spots.isNullOrEmpty()) return
-
-        autoOpenedMap = true
-        onOpenMap()
     }
 
     private fun buildSuccess(
@@ -306,6 +310,7 @@ class HomeViewModel(
             searchText = current?.searchText.orEmpty(),
             isSearchActive = current?.isSearchActive ?: false,
             recentSearchQueries = recentSearchQueries.toList(),
+            listLayoutMode = listLayoutMode,
         )
     }
 

@@ -23,8 +23,8 @@ import com.example.spotter.core.designsystem.theme.SpotterYellow
 import com.example.spotter.feature.settings.presentation.generated.resources.Res
 import com.example.spotter.feature.settings.presentation.generated.resources.settings_dialog_done
 import com.example.spotter.feature.settings.presentation.generated.resources.settings_list_default_view
+import com.example.spotter.feature.settings.presentation.generated.resources.settings_list_default_view_column
 import com.example.spotter.feature.settings.presentation.generated.resources.settings_list_default_view_list
-import com.example.spotter.feature.settings.presentation.generated.resources.settings_list_default_view_map
 import com.example.spotter.feature.settings.presentation.generated.resources.settings_list_preference
 import com.example.spotter.feature.settings.presentation.generated.resources.settings_list_remember_category
 import com.example.spotter.feature.settings.presentation.generated.resources.settings_list_sort_distance
@@ -61,9 +61,9 @@ internal fun ListPreferenceDialog(
                     onClick = { onDefaultViewSelected(DefaultHomeViewMode.LIST) },
                 )
                 SettingsPickerOption(
-                    label = stringResource(Res.string.settings_list_default_view_map),
-                    selected = state.defaultHomeViewMode == DefaultHomeViewMode.MAP,
-                    onClick = { onDefaultViewSelected(DefaultHomeViewMode.MAP) },
+                    label = stringResource(Res.string.settings_list_default_view_column),
+                    selected = state.defaultHomeViewMode == DefaultHomeViewMode.COLUMN,
+                    onClick = { onDefaultViewSelected(DefaultHomeViewMode.COLUMN) },
                 )
 
                 ListPreferenceSectionTitle(
@@ -152,7 +152,7 @@ internal fun listPreferenceSummary(
 ): String {
     val viewLabel = when (defaultHomeViewMode) {
         DefaultHomeViewMode.LIST -> stringResource(Res.string.settings_list_default_view_list)
-        DefaultHomeViewMode.MAP -> stringResource(Res.string.settings_list_default_view_map)
+        DefaultHomeViewMode.COLUMN -> stringResource(Res.string.settings_list_default_view_column)
     }
     val sortLabel = when (listSortOrder) {
         ListSortOrder.DISTANCE -> stringResource(Res.string.settings_list_sort_distance)

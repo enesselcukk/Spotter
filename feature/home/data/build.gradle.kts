@@ -1,5 +1,6 @@
 plugins {
     id("spotter.library.kmp")
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -31,6 +32,9 @@ kotlin {
             implementation(project(":feature:home:domain"))
 
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.multiplatform.settings)
+            implementation(libs.multiplatform.settings.no.arg)
             implementation(libs.ktor.client.core)
             api(libs.koin.core)
         }

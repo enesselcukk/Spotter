@@ -2,11 +2,11 @@ package com.example.spotter.core.datastore
 
 enum class DefaultHomeViewMode {
     LIST,
-    MAP,
+    COLUMN,
 }
 
 fun defaultHomeViewModeFromStorage(value: String?): DefaultHomeViewMode =
     when (value) {
-        "MAP" -> DefaultHomeViewMode.MAP
+        "COLUMN", "MAP" -> DefaultHomeViewMode.COLUMN
         else -> DefaultHomeViewMode.LIST
     }

@@ -5,7 +5,7 @@
     <string name="settings_list_preference">List Preference</string>
     <string name="settings_list_default_view">Default View</string>
     <string name="settings_list_default_view_list">List</string>
-    <string name="settings_list_default_view_map">Map</string>
+    <string name="settings_list_default_view_column">Column</string>
     <string name="settings_list_sort_order">Sort Order</string>
     <string name="settings_list_sort_distance">Nearest first</string>
     <string name="settings_list_sort_name_asc">Name (A–Z)</string>

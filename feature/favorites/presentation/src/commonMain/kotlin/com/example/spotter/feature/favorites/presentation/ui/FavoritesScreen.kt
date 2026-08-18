@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,15 +22,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.spotter.core.datastore.DefaultHomeViewMode
 import com.example.spotter.core.designsystem.component.spotterStatusBarsPadding
 import com.example.spotter.core.spotui.SpotterTab
 import com.example.spotter.core.spotui.component.CarbonFiberBackground
 import com.example.spotter.core.spotui.component.SpotCategoryChips
-import com.example.spotter.core.spotui.component.SpotDetailCard
 import com.example.spotter.core.spotui.component.SpotSearchBar
 import com.example.spotter.core.spotui.component.SpotSearchSuggestionsPanel
+import com.example.spotter.core.spotui.component.SpotSpotsList
 import com.example.spotter.core.spotui.component.SpotterBottomBar
-import com.example.spotter.core.spotui.platform.rememberDirectionsLauncher
 import com.example.spotter.feature.favorites.presentation.generated.resources.Res
 import com.example.spotter.feature.favorites.presentation.generated.resources.favorites_empty
 import com.example.spotter.feature.favorites.presentation.generated.resources.favorites_empty_category
@@ -47,7 +45,6 @@ fun FavoritesScreen(
     viewModel: FavoritesViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val launchDirections = rememberDirectionsLauncher()
     val colors = MaterialTheme.colorScheme
     val isDark = colors.background.luminance() < 0.5f
 
@@ -83,7 +80,8 @@ fun FavoritesScreen(
                 FavoritesList(
                     favorites = uiState.filteredFavorites,
                     totalCount = uiState.favorites.size,
-                    onDirections = launchDirections,
+                    listLayoutMode = uiState.listLayoutMode,
+                    onNavigate = viewModel::onNavigateToSpot,
                     onFavoriteToggle = viewModel::onFavoriteToggle,
                     modifier = Modifier.weight(1f),
                 )
@@ -101,7 +99,8 @@ fun FavoritesScreen(
 private fun FavoritesList(
     favorites: List<SpotDto>,
     totalCount: Int,
-    onDirections: (Double, Double, String?) -> Unit,
+    listLayoutMode: DefaultHomeViewMode,
+    onNavigate: (Long) -> Unit,
     onFavoriteToggle: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -118,22 +117,16 @@ private fun FavoritesList(
         }
 
         else -> {
-            LazyColumn(
-                modifier = modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                itemsIndexed(favorites, key = { _, spot -> spot.id }) { index, spot ->
-                    SpotDetailCard(
-                        spot = spot,
-                        isFavorite = true,
-                        markerIndex = index + 1,
-                        onDirections = onDirections,
-                        onFavoriteToggle = onFavoriteToggle,
-                        highlighted = true,
-                    )
-                }
-            }
+            SpotSpotsList(
+                spots = favorites,
+                layoutMode = listLayoutMode,
+                favoriteIds = favorites.map { it.id }.toSet(),
+                selectedSpotId = null,
+                onNavigate = onNavigate,
+                onFavoriteToggle = onFavoriteToggle,
+                alwaysHighlighted = true,
+                modifier = modifier,
+            )
         }
     }
 }

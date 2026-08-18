@@ -1,6 +1,7 @@
 package com.example.spotter.feature.home.presentation.ui
 
 import androidx.compose.runtime.Immutable
+import com.example.spotter.core.datastore.DefaultHomeViewMode
 import com.example.spotter.core.spotui.SpotCategories
 import com.example.spotter.core.spotui.buildSearchSuggestions
 import com.example.spotter.core.spotui.filterByCategoryAndSearch
@@ -24,6 +25,7 @@ sealed interface HomeUiState {
         val searchText: String = "",
         val isSearchActive: Boolean = false,
         val recentSearchQueries: List<String> = emptyList(),
+        val listLayoutMode: DefaultHomeViewMode = DefaultHomeViewMode.LIST,
     ) : HomeUiState {
         val filteredSpots: List<SpotDto>
             get() = spots.filterByCategoryAndSearch(selectedCategory, searchText)

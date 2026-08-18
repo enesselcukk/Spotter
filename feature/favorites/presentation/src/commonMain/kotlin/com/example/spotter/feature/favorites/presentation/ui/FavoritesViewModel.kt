@@ -1,6 +1,7 @@
 package com.example.spotter.feature.favorites.presentation.ui
 
 import androidx.lifecycle.viewModelScope
+import com.example.spotter.core.datastore.UserSettingsRepository
 import com.example.spotter.core.navigation.NavigationCommand
 import com.example.spotter.core.navigation.NavigationManager
 import com.example.spotter.core.navigation.switchTab
@@ -30,6 +31,7 @@ class FavoritesViewModel(
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val mapSpotsHandoff: MapSpotsHandoff,
     private val navigationManager: NavigationManager,
+    userSettingsRepository: UserSettingsRepository,
 ) : CoreViewModel() {
 
     private val _uiState = MutableStateFlow(FavoritesUiState())
@@ -37,6 +39,12 @@ class FavoritesViewModel(
     private val recentSearchQueries = mutableListOf<String>()
 
     init {
+        viewModelScope.launch {
+            userSettingsRepository.defaultHomeViewMode.collect { layoutMode ->
+                _uiState.update { it.copy(listLayoutMode = layoutMode) }
+            }
+        }
+
         viewModelScope.launch {
             observeFavoritesUseCase().collect { favorites ->
                 _uiState.update { current ->
@@ -114,6 +122,23 @@ class FavoritesViewModel(
     fun onFavoriteToggle(spotId: Long) {
         val spot = _uiState.value.favorites.find { it.id == spotId } ?: return
         viewModelScope.launch { toggleFavoriteUseCase(spot) }
+    }
+
+    fun onNavigateToSpot(spotId: Long) {
+        val favorites = _uiState.value.favorites
+        if (favorites.isNotEmpty()) {
+            mapSpotsHandoff.publish(favorites)
+        }
+        val fallback = SpotSearchQuery.fallback()
+        navigationManager.navigate(
+            NavigationCommand.NavigateTo(
+                to = MapScreenDestination(
+                    userLatitude = fallback.latitude,
+                    userLongitude = fallback.longitude,
+                    focusedSpotId = spotId,
+                ),
+            ),
+        )
     }
 
     fun onTabSelected(tab: SpotterTab) {

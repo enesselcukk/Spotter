@@ -31,6 +31,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(project(":core:datastore"))
             implementation(project(":core:presentation"))
             implementation(project(":core:navigation"))
             implementation(project(":core:spot-ui"))

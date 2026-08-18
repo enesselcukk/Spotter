@@ -18,6 +18,15 @@ class PreloadHomeDataUseCase(
         onProgress: (Float) -> Unit = {},
     ): HomePreloadResult {
         onProgress(0.15f)
+
+        homePreloadRepository.getFreshCache()
+            ?.takeIf { it.spots.isNotEmpty() && it.errorMessage == null }
+            ?.let { cached ->
+                homePreloadRepository.save(cached)
+                onProgress(1f)
+                return cached
+            }
+
         val searchQuery = resolveSearchLocationWithTimeout()
         onProgress(0.35f)
 

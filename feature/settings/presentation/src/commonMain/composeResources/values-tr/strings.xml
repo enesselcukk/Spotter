@@ -5,7 +5,7 @@
     <string name="settings_list_preference">Liste Tercihi</string>
     <string name="settings_list_default_view">Varsayılan Görünüm</string>
     <string name="settings_list_default_view_list">Liste</string>
-    <string name="settings_list_default_view_map">Harita</string>
+    <string name="settings_list_default_view_column">Sütun</string>
     <string name="settings_list_sort_order">Sıralama</string>
     <string name="settings_list_sort_distance">En yakın</string>
     <string name="settings_list_sort_name_asc">İsim (A–Z)</string>

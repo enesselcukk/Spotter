@@ -55,7 +55,7 @@ fun SpotDetailCard(
     spot: SpotDto,
     isFavorite: Boolean,
     markerIndex: Int = 1,
-    onDirections: (Double, Double, String?) -> Unit,
+    onNavigate: (Long) -> Unit,
     onFavoriteToggle: (Long) -> Unit,
     onMapPreviewClick: ((Long) -> Unit)? = null,
     highlighted: Boolean = false,
@@ -165,12 +165,105 @@ fun SpotDetailCard(
             SpotCardActionButton(
                 label = stringResource(Res.string.spot_directions),
                 icon = SpotCardActionIcon.Navigate,
-                onClick = { onDirections(spot.lat, spot.lon, spot.name) },
+                onClick = { onNavigate(spot.id) },
                 isDark = isDark,
                 modifier = Modifier.weight(1f),
             )
             SpotCardActionButton(
                 label = favoriteLabel,
+                icon = SpotCardActionIcon.Favorite,
+                filled = isFavorite,
+                onClick = { onFavoriteToggle(spot.id) },
+                isDark = isDark,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+fun SpotColumnCard(
+    spot: SpotDto,
+    isFavorite: Boolean,
+    markerIndex: Int = 1,
+    onNavigate: (Long) -> Unit,
+    onFavoriteToggle: (Long) -> Unit,
+    highlighted: Boolean = false,
+    modifier: Modifier = Modifier,
+) {
+    val colors = MaterialTheme.colorScheme
+    val isDark = colors.background.luminance() < 0.5f
+    val cardShape = RoundedCornerShape(16.dp)
+    val borderColor = when {
+        highlighted && isDark -> Color.White.copy(alpha = 0.12f)
+        isDark -> Color.White.copy(alpha = 0.06f)
+        highlighted -> colors.outline.copy(alpha = 0.55f)
+        else -> colors.outline.copy(alpha = 0.35f)
+    }
+    val socket = spotSocketLabel(spot)
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(cardShape)
+            .background(if (isDark) SpotterDarkSurfaceElevated else colors.surface)
+            .border(1.dp, borderColor, cardShape)
+            .padding(10.dp),
+    ) {
+        SpotMapPreview(
+            markerIndex = markerIndex,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(72.dp),
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = spotDisplayName(spot),
+            color = colors.onSurface,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 14.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (!socket.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "⚡ $socket",
+                color = colors.onSurfaceVariant,
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = spotDistanceLabel(spot),
+            color = colors.onSurface,
+            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = spotOpeningHoursLabel(spot),
+            color = SpotterGreen,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            SpotColumnIconButton(
+                icon = SpotCardActionIcon.Navigate,
+                onClick = { onNavigate(spot.id) },
+                isDark = isDark,
+                modifier = Modifier.weight(1f),
+            )
+            SpotColumnIconButton(
                 icon = SpotCardActionIcon.Favorite,
                 filled = isFavorite,
                 onClick = { onFavoriteToggle(spot.id) },
@@ -223,6 +316,36 @@ fun SpotCompactItem(
                 overflow = TextOverflow.Ellipsis,
             )
         }
+    }
+}
+
+@Composable
+private fun SpotColumnIconButton(
+    icon: SpotCardActionIcon,
+    onClick: () -> Unit,
+    isDark: Boolean,
+    modifier: Modifier = Modifier,
+    filled: Boolean = false,
+) {
+    val colors = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(12.dp)
+    val background = if (isDark) SpotterDarkCardButton else colors.surfaceVariant
+    val content = if (isDark) Color.White else colors.onSurface
+
+    Box(
+        modifier = modifier
+            .height(36.dp)
+            .clip(shape)
+            .background(background)
+            .border(
+                width = 1.dp,
+                color = if (isDark) Color.White.copy(alpha = 0.06f) else colors.outline.copy(alpha = 0.35f),
+                shape = shape,
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        SpotCardActionIconView(icon = icon, tint = content, filled = filled)
     }
 }
 

@@ -1,6 +1,7 @@
 package com.example.spotter.feature.favorites.presentation.ui
 
 import androidx.compose.runtime.Immutable
+import com.example.spotter.core.datastore.DefaultHomeViewMode
 import com.example.spotter.core.spotui.SpotCategories
 import com.example.spotter.core.spotui.buildSearchSuggestions
 import com.example.spotter.core.spotui.filterByCategoryAndSearch
@@ -14,6 +15,7 @@ data class FavoritesUiState(
     val searchText: String = "",
     val isSearchActive: Boolean = false,
     val recentSearchQueries: List<String> = emptyList(),
+    val listLayoutMode: DefaultHomeViewMode = DefaultHomeViewMode.LIST,
 ) {
     val filteredFavorites: List<SpotDto>
         get() = favorites.filterByCategoryAndSearch(selectedCategory, searchText)
