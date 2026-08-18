@@ -1,4 +1,3 @@
 <resources>
-    <string name="splash_tagline">YOUR ON-ROUTE COMPANION</string>
-    <string name="splash_initializing">Initializing…</string>
+    <string name="splash_tagline">SERVICE LOCATOR</string>
 </resources>
