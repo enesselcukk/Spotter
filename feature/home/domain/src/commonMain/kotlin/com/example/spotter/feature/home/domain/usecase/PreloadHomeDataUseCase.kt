@@ -30,12 +30,6 @@ class PreloadHomeDataUseCase(
         val searchQuery = resolveSearchLocationWithTimeout()
         onProgress(0.35f)
 
-        val partialResult = HomePreloadResult(
-            searchQuery = searchQuery,
-            spots = emptyList(),
-        )
-        homePreloadRepository.save(partialResult)
-
         val networkResult = try {
             withTimeout(NETWORK_TIMEOUT_MS) {
                 homeRepository
@@ -72,19 +66,38 @@ class PreloadHomeDataUseCase(
             )
         }
 
-        homePreloadRepository.save(preloadResult)
+        val resolvedResult = preloadResult.withStaleFallback()
+        homePreloadRepository.save(resolvedResult)
         onProgress(1f)
-        return preloadResult
+        return resolvedResult
     }
 
     fun ensureFallbackSaved() {
+        if (homePreloadRepository.peek()?.spots?.isNotEmpty() == true) return
+
+        homePreloadRepository.getAnyCache()
+            ?.takeIf { it.spots.isNotEmpty() }
+            ?.let { stale ->
+                homePreloadRepository.save(stale)
+                return
+            }
+
         if (homePreloadRepository.peek() != null) return
+
         homePreloadRepository.save(
             HomePreloadResult(
                 searchQuery = SpotSearchQuery.fallback(),
                 spots = emptyList(),
             ),
         )
+    }
+
+    private fun HomePreloadResult.withStaleFallback(): HomePreloadResult {
+        if (spots.isNotEmpty()) return this
+        return homePreloadRepository.getAnyCache()
+            ?.takeIf { it.spots.isNotEmpty() }
+            ?.copy(searchQuery = searchQuery)
+            ?: this
     }
 
     private suspend fun resolveSearchLocationWithTimeout(): SpotSearchQuery =

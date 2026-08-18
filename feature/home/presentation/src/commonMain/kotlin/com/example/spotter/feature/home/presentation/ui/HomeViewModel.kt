@@ -27,6 +27,7 @@ import com.example.spotter.feature.home.domain.util.SpotListSorter
 import com.example.spotter.feature.map.contract.MapScreenDestination
 import com.example.spotter.feature.map.domain.repository.MapSpotsHandoff
 import com.example.spotter.feature.settings.contract.SettingsScreenDestination
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,6 +53,7 @@ class HomeViewModel(
     private var rememberLastCategory = true
     private var storedCategory = SpotCategories.CHARGING
     private val recentSearchQueries = mutableListOf<String>()
+    private var loadJob: Job? = null
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -242,43 +244,48 @@ class HomeViewModel(
     }
 
     private fun initializeFromPreload() {
-        val preload = homePreloadRepository.consume() ?: return refreshLocationAndLoad()
+        val preload = homePreloadRepository.consume()
+        if (preload == null || preload.spots.isEmpty()) {
+            refreshLocationAndLoad()
+            return
+        }
 
         searchQuery = preload.searchQuery
         _uiState.value = buildSuccess(preload.spots)
-        if (preload.spots.isEmpty() || preload.errorMessage != null) {
-            loadSpots()
-        }
     }
 
     private fun refreshLocationAndLoad() {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             searchQuery = withTimeoutOrNull(LOCATION_TIMEOUT_MS) {
                 resolveSearchLocationUseCase()
             } ?: SpotSearchQuery.fallback()
             _uiState.value = buildSuccess(emptyList(), isLoadingSpots = true)
-            loadSpots()
+            fetchSpots()
         }
     }
 
-    private fun loadSpots() {
-        viewModelScope.launch {
-            updateSuccess { it.copy(isLoadingSpots = true) }
-            safeFlowApiCall { getNearbySpotsUseCase(searchQuery) }
-                .collect { result ->
-                    _uiState.value = when (result) {
-                        is RestResult.Loading -> result.result?.let { buildSuccess(it, isLoadingSpots = true) }
-                            ?: currentSuccess?.copy(isLoadingSpots = true)
-                            ?: HomeUiState.Loading
+    private suspend fun fetchSpots() {
+        updateSuccess { it.copy(isLoadingSpots = true) }
+        safeFlowApiCall { getNearbySpotsUseCase(searchQuery) }
+            .collect { result ->
+                _uiState.value = when (result) {
+                    is RestResult.Loading -> result.result?.let { buildSuccess(it, isLoadingSpots = true) }
+                        ?: currentSuccess?.copy(isLoadingSpots = true)
+                        ?: HomeUiState.Loading
 
-                        is RestResult.Success -> buildSuccess(result.result)
-
-                        is RestResult.Error -> result.result?.let { buildSuccess(it) }
-                            ?: currentSuccess?.copy(isLoadingSpots = false)
-                            ?: HomeUiState.Error(message = result.error.message)
+                    is RestResult.Success -> {
+                        if (result.result.isEmpty()) {
+                            HomeUiState.Error(message = EMPTY_SPOTS_MESSAGE)
+                        } else {
+                            buildSuccess(result.result)
+                        }
                     }
+
+                    is RestResult.Error -> result.result?.let { buildSuccess(it) }
+                        ?: HomeUiState.Error(message = result.error.message)
                 }
-        }
+            }
     }
 
     private fun buildSuccess(
@@ -355,5 +362,6 @@ class HomeViewModel(
 
     private companion object {
         const val LOCATION_TIMEOUT_MS = 12_000L
+        const val EMPTY_SPOTS_MESSAGE = "No spots found nearby"
     }
 }

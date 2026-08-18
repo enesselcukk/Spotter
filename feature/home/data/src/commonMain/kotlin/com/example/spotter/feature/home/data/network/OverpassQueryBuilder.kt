@@ -3,7 +3,7 @@ package com.example.spotter.feature.home.data.network
 import com.example.spotter.feature.home.domain.model.SpotSearchQuery
 
 internal object OverpassQueryBuilder {
-    private const val QUERY_TIMEOUT_SECONDS = 55
+    private const val QUERY_TIMEOUT_SECONDS = 25
     private const val MAX_RESULTS = 150
 
     fun build(query: SpotSearchQuery): String {

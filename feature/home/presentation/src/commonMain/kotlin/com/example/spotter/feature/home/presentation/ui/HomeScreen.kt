@@ -40,6 +40,7 @@ import com.example.spotter.feature.home.presentation.generated.resources.Res
 import com.example.spotter.feature.home.presentation.generated.resources.home_empty_category
 import com.example.spotter.feature.home.presentation.generated.resources.home_empty_spots
 import com.example.spotter.feature.home.presentation.generated.resources.home_error_generic
+import com.example.spotter.feature.home.presentation.generated.resources.home_error_network
 import com.example.spotter.feature.home.presentation.generated.resources.home_error_rate_limit
 import com.example.spotter.feature.home.presentation.generated.resources.home_error_timeout
 import com.example.spotter.feature.home.presentation.generated.resources.home_error_unavailable
@@ -237,6 +238,12 @@ private fun mapHomeErrorMessage(message: String?): String {
             message.contains("502", ignoreCase = true) ||
             message.contains("Unavailable", ignoreCase = true) ->
             stringResource(Res.string.home_error_unavailable)
+
+        message.contains("Failed to connect", ignoreCase = true) ||
+            message.contains("Connection refused", ignoreCase = true) ||
+            message.contains("Unable to resolve host", ignoreCase = true) ||
+            message.contains("Network is unreachable", ignoreCase = true) ->
+            stringResource(Res.string.home_error_network)
 
         else -> message
     }

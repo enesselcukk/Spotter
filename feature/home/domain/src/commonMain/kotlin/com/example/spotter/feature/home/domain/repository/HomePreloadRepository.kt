@@ -7,4 +7,5 @@ interface HomePreloadRepository {
     fun peek(): HomePreloadResult?
     fun consume(): HomePreloadResult?
     fun getFreshCache(): HomePreloadResult?
+    fun getAnyCache(): HomePreloadResult?
 }

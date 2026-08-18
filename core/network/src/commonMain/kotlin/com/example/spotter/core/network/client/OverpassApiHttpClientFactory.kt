@@ -15,12 +15,22 @@ import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-private const val TIMEOUT_MILLIS = 60_000L
+private const val CONNECT_TIMEOUT_MILLIS = 15_000L
+private const val REQUEST_TIMEOUT_MILLIS = 45_000L
 
 object OverpassApiHttpClientFactory {
 
     fun create(
         enableLogging: Boolean = true,
+    ): HttpClient = createInternal(enableLogging = enableLogging, applyDefaultBaseUrl = true)
+
+    fun createDirect(
+        enableLogging: Boolean = true,
+    ): HttpClient = createInternal(enableLogging = enableLogging, applyDefaultBaseUrl = false)
+
+    private fun createInternal(
+        enableLogging: Boolean,
+        applyDefaultBaseUrl: Boolean,
     ): HttpClient {
         return HttpClient(getProvide()) {
             install(ContentNegotiation) {
@@ -45,16 +55,18 @@ object OverpassApiHttpClientFactory {
             }
 
             install(HttpTimeout) {
-                requestTimeoutMillis = TIMEOUT_MILLIS
-                connectTimeoutMillis = TIMEOUT_MILLIS
-                socketTimeoutMillis = TIMEOUT_MILLIS
+                requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS
+                connectTimeoutMillis = CONNECT_TIMEOUT_MILLIS
+                socketTimeoutMillis = REQUEST_TIMEOUT_MILLIS
             }
 
-            defaultRequest {
-                url {
-                    protocol = URLProtocol.HTTPS
-                    host = HOST
-                    encodedPath = BASE_PATH
+            if (applyDefaultBaseUrl) {
+                defaultRequest {
+                    url {
+                        protocol = URLProtocol.HTTPS
+                        host = HOST
+                        encodedPath = BASE_PATH
+                    }
                 }
             }
         }

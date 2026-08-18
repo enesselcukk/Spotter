@@ -55,6 +55,6 @@ class SplashViewModel(
 
     private companion object {
         const val MIN_SPLASH_DURATION_MS = 2_000L
-        const val PRELOAD_TIMEOUT_MS = 25_000L
+        const val PRELOAD_TIMEOUT_MS = 35_000L
     }
 }

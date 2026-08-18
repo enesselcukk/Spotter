@@ -19,15 +19,21 @@ internal class HomePreloadRepositoryImpl(
         }
     }
 
-    override fun peek(): HomePreloadResult? = memoryCache ?: readFreshPersistent()
+    override fun peek(): HomePreloadResult? = memoryCache ?: getFreshCache()
 
     override fun consume(): HomePreloadResult? {
-        val result = memoryCache ?: readFreshPersistent()
+        val memory = memoryCache
         memoryCache = null
-        return result
+
+        return when {
+            memory?.spots?.isNotEmpty() == true -> memory
+            else -> getFreshCache() ?: getAnyCache() ?: memory
+        }
     }
 
-    override fun getFreshCache(): HomePreloadResult? = readFreshPersistent()
+    override fun getFreshCache(): HomePreloadResult? = readPersistent(requireFresh = true)
+
+    override fun getAnyCache(): HomePreloadResult? = readPersistent(requireFresh = false)
 
     private fun persist(result: HomePreloadResult) {
         settings[CACHE_KEY] = json.encodeToString(
@@ -36,12 +42,12 @@ internal class HomePreloadRepositoryImpl(
         )
     }
 
-    private fun readFreshPersistent(): HomePreloadResult? {
+    private fun readPersistent(requireFresh: Boolean): HomePreloadResult? {
         val stored = settings.getStringOrNull(CACHE_KEY) ?: return null
         val cached = runCatching {
             json.decodeFromString(CachedHomePreload.serializer(), stored)
         }.getOrNull() ?: return null
-        if (!cached.isFresh()) return null
+        if (requireFresh && !cached.isFresh()) return null
         return cached.toResult()
     }
 

@@ -8,11 +8,12 @@ import com.example.spotter.feature.home.domain.repository.HomePreloadRepository
 import com.example.spotter.feature.home.domain.repository.HomeRepository
 import com.example.spotter.feature.home.domain.repository.LocationRepository
 import org.koin.core.module.Module
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 val homeDataModule: Module = module {
-    single { HomeApi(httpClient = get()) }
-    single<HomeRepository> { HomeRepositoryImpl(homeApi = get()) }
+    single { HomeApi(httpClient = get(named("overpassDirect"))) }
+    single<HomeRepository> { HomeRepositoryImpl(homeApi = get(), homePreloadRepository = get()) }
     single<LocationRepository> { LocationRepositoryImpl(platformLocationProvider = get()) }
     single<HomePreloadRepository> { HomePreloadRepositoryImpl() }
 }

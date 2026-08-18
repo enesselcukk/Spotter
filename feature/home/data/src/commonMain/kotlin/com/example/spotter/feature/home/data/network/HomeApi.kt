@@ -4,6 +4,7 @@ import com.example.spotter.core.data.exception.HttpStatusException
 import com.example.spotter.core.network.config.OverpassApiConfig
 import com.example.spotter.feature.home.domain.model.SpotSearchQuery
 import io.ktor.client.HttpClient
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.request.url
@@ -18,19 +19,26 @@ class HomeApi(
     suspend fun getNearbySpots(query: SpotSearchQuery): HttpResponse {
         val body = OverpassQueryBuilder.build(query)
         var lastResponse: HttpResponse? = null
+        var lastError: Throwable? = null
 
         for (host in OverpassApiConfig.HOSTS) {
-            val response = httpClient.post {
-                url("https://$host/api/interpreter")
-                contentType(ContentType.Text.Plain)
-                setBody(body)
+            try {
+                val response = httpClient.post {
+                    url("https://$host/api/interpreter")
+                    header("User-Agent", "Spotter/1.0")
+                    contentType(ContentType.Text.Plain)
+                    setBody(body)
+                }
+                if (response.status.isSuccess()) return response
+                lastResponse = response
+                if (response.status.value !in RETRYABLE_STATUS_CODES) return response
+            } catch (error: Exception) {
+                lastError = error
             }
-            if (response.status.isSuccess()) return response
-            lastResponse = response
-            if (response.status.value !in RETRYABLE_STATUS_CODES) return response
         }
 
-        return lastResponse ?: throw HttpStatusException(
+        lastResponse?.let { return it }
+        throw lastError ?: HttpStatusException(
             statusCode = 503,
             message = "Overpass service unavailable",
         )
