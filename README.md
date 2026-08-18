@@ -1,6 +1,6 @@
 # Spotter
 
-Spotter is a **Kotlin Multiplatform (KMP)** mobile app for Android and iOS. It helps you find nearby charging stations, car washes, parking, fuel, and repair shops. Most of the UI and business logic is shared. Platform code is used only where it is really needed (maps, location, system bars).
+Spotter is a **Compose Multiplatform (CMP)** mobile app for Android and iOS. It helps you find nearby charging stations, car washes, parking, fuel, and repair shops. Most of the UI and business logic is shared. Platform code is used only where it is really needed (maps, location, system bars).
 
 ## Features
 
@@ -90,7 +90,7 @@ Every feature is split into up to four modules:
 | `app:shared` | `SpotterApp()`, Koin setup, nav graph |
 | `app:ui-components` | Design system, theme, colors |
 | `composeApp` | Android application entry |
-| `iosApp` | iOS application entry (Xcode + KMP framework) |
+| `iosApp` | iOS application entry (Xcode + CMP framework) |
 
 ## Platform-Specific Code
 
