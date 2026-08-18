@@ -197,12 +197,3 @@ open iosApp/iosApp.xcodeproj
 ```
 
 Select a simulator or device in Xcode and press Run. Gradle builds the shared Kotlin framework first.
-
-## Data Sources
-
-- **Spots** — [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API) (charging, parking, car wash, fuel, repair from OpenStreetMap)
-- **Routes** — [OSRM](https://project-osrm.org/) (driving, cycling, walking)
-
-## License
-
-This project is for personal and learning use.
