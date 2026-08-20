@@ -31,7 +31,7 @@ fun SpotSpotsList(
         DefaultHomeViewMode.LIST -> {
             LazyColumn(
                 modifier = modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 16.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 108.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 itemsIndexed(spots, key = { _, spot -> spot.id }) { index, spot ->
@@ -53,7 +53,7 @@ fun SpotSpotsList(
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 16.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 108.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {

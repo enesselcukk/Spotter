@@ -19,9 +19,7 @@ import com.example.spotter.core.designsystem.theme.SpotterTheme
 import com.example.spotter.core.navigation.NavGraphProvider
 import com.example.spotter.core.navigation.NavigationCommand
 import com.example.spotter.core.navigation.NavigationManager
-import com.example.spotter.feature.home.contract.HomeScreenDestination
 import com.example.spotter.feature.splash.contract.SplashScreenDestination
-import com.example.spotter.feature.splash.presentation.ui.SplashScreen
 import com.example.spotter.shared.localization.LocalAppTheme
 import com.example.spotter.shared.localization.SpotterAppEnvironment
 import com.example.spotter.shared.localization.deviceLanguageTag
@@ -100,15 +98,6 @@ fun SpotterApp() {
                 backStack = backStack,
                 onBack = { backStack.removeLastOrNull() },
                 entryProvider = entryProvider {
-                    entry<SplashScreenDestination> {
-                        SplashScreen(
-                            onNavigateHome = {
-                                backStack.clear()
-                                backStack.add(HomeScreenDestination)
-                            },
-                        )
-                    }
-
                     providers.forEach { provider ->
                         provider.registerEntries(this)
                     }

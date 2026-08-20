@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -42,6 +43,7 @@ import com.example.spotter.core.designsystem.theme.SpotterBlue
 import com.example.spotter.core.designsystem.theme.SpotterYellow
 import com.example.spotter.core.spotui.SpotterTab
 import com.example.spotter.core.spotui.component.SpotterBottomBar
+import com.example.spotter.core.spotui.component.rememberScrollAwareBottomBarState
 import com.example.spotter.feature.settings.presentation.generated.resources.Res
 import com.example.spotter.feature.settings.presentation.generated.resources.settings_app_version
 import com.example.spotter.feature.settings.presentation.generated.resources.settings_auto_apply_localization
@@ -72,21 +74,31 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = MaterialTheme.colorScheme
 
-    Column(
+    val barState = rememberScrollAwareBottomBarState()
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.background)
-            .spotterStatusBarsPadding(),
+            .nestedScroll(barState.nestedScrollConnection),
     ) {
-        SettingsContent(
-            state = uiState,
-            viewModel = viewModel,
-            modifier = Modifier.weight(1f),
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .spotterStatusBarsPadding(),
+        ) {
+            SettingsContent(
+                state = uiState,
+                viewModel = viewModel,
+                modifier = Modifier.weight(1f),
+            )
+        }
 
         SpotterBottomBar(
             selected = SpotterTab.Settings,
             onSelected = viewModel::onTabSelected,
+            visible = barState.visible,
+            modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
 }
@@ -103,7 +115,7 @@ private fun SettingsContent(
         modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 108.dp),
     ) {
         Text(
             text = stringResource(Res.string.settings_title),

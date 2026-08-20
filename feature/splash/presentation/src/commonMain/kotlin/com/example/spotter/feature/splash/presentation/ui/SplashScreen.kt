@@ -11,13 +11,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,28 +26,18 @@ import com.example.spotter.feature.splash.presentation.platform.LocationPermissi
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
-private val SplashBackground = Color(0xFF000000)
-private val SplashSilver = Color(0xFFF0F0F0)
-private val SplashGold = Color(0xFFC5A059)
-private val SplashIndicatorInactive = Color(0xFF3A3A3A)
-
 @Composable
 fun SplashScreen(
-    onNavigateHome: () -> Unit,
     viewModel: SplashViewModel = koinViewModel(),
 ) {
     LocationPermissionEffect(onPermissionResolved = viewModel::startPreloadIfNeeded)
 
-    LaunchedEffect(viewModel) {
-        viewModel.navigateHome.collect {
-            onNavigateHome()
-        }
-    }
+    val colors = MaterialTheme.colorScheme
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SplashBackground),
+            .background(colors.background),
     ) {
         Column(
             modifier = Modifier
@@ -61,7 +50,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = "SPOTTER",
-                color = SplashSilver,
+                color = colors.onBackground,
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 4.sp,
@@ -69,7 +58,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(Res.string.splash_tagline),
-                color = SplashSilver.copy(alpha = 0.7f),
+                color = colors.onSurfaceVariant,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
                 letterSpacing = 4.sp,
@@ -88,6 +77,8 @@ fun SplashScreen(
 private fun SplashPageIndicators(
     modifier: Modifier = Modifier,
 ) {
+    val colors = MaterialTheme.colorScheme
+
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -100,8 +91,8 @@ private fun SplashPageIndicators(
                     .height(3.dp)
                     .clip(RoundedCornerShape(50))
                     .background(
-                        if (index == 0) SplashGold else SplashIndicatorInactive,
-                    ),
+                        if (index == 0) colors.primary else colors.outline,
+                    )
             )
         }
     }

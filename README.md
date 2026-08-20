@@ -17,6 +17,7 @@ Spotter is a **Compose Multiplatform (CMP)** mobile app for Android and iOS. It 
 
 <p align="center">
   <img src="docs/screenshots/ios/01-home.png" alt="iOS Home" width="16%" />
+  <img src="docs/screenshots/ios/07-home-list.png" alt="iOS Home list" width="16%" />
   <img src="docs/screenshots/ios/02-map-route.png" alt="iOS Map route" width="16%" />
   <img src="docs/screenshots/ios/03-navigation.png" alt="iOS Navigation" width="16%" />
 </p>
@@ -25,12 +26,13 @@ Spotter is a **Compose Multiplatform (CMP)** mobile app for Android and iOS. It 
   <img src="docs/screenshots/ios/05-settings.png" alt="iOS Settings" width="16%" />
   <img src="docs/screenshots/ios/06-search.png" alt="iOS Search" width="16%" />
 </p>
-<p align="center"><sub>Home · Map · Navigation · Favorites · Settings · Search</sub></p>
+<p align="center"><sub>Home · Home list · Map · Navigation · Favorites · Settings · Search</sub></p>
 
 ### Android
 
 <p align="center">
   <img src="docs/screenshots/android/01-home.png" alt="Android Home" width="16%" />
+  <img src="docs/screenshots/android/07-home-list.png" alt="Android Home list" width="16%" />
   <img src="docs/screenshots/android/02-map-route.png" alt="Android Map route" width="16%" />
   <img src="docs/screenshots/android/03-navigation.png" alt="Android Navigation" width="16%" />
 </p>
@@ -39,7 +41,7 @@ Spotter is a **Compose Multiplatform (CMP)** mobile app for Android and iOS. It 
   <img src="docs/screenshots/android/05-settings.png" alt="Android Settings" width="16%" />
   <img src="docs/screenshots/android/06-search.png" alt="Android Search" width="16%" />
 </p>
-<p align="center"><sub>Home · Map · Navigation · Favorites · Settings · Search</sub></p>
+<p align="center"><sub>Home · Home list · Map · Navigation · Favorites · Settings · Search</sub></p>
 
 ## Architecture
 

@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,6 +40,7 @@ import com.example.spotter.core.spotui.component.SpotExpandedCardOverlay
 import com.example.spotter.core.spotui.component.SpotCardBounds
 import com.example.spotter.core.spotui.component.SpotSpotsList
 import com.example.spotter.core.spotui.component.SpotterBottomBar
+import com.example.spotter.core.spotui.component.rememberScrollAwareBottomBarState
 import com.example.spotter.core.datastore.DefaultHomeViewMode
 import com.example.spotter.feature.home.presentation.ui.components.SpotExpandedMapPreview
 import com.example.spotter.feature.home.domain.model.SpotDto
@@ -68,6 +70,7 @@ fun HomeScreen(
     CarbonFiberBackground(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
             val successState = uiState as? HomeUiState.Success
+            val barState = rememberScrollAwareBottomBarState()
             val backgroundScale by animateFloatAsState(
                 targetValue = if (successState?.isExpandedSpotVisible == true) 0.96f else 1f,
                 animationSpec = tween(durationMillis = 520),
@@ -77,6 +80,7 @@ fun HomeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .nestedScroll(barState.nestedScrollConnection)
                     .graphicsLayer {
                         scaleX = backgroundScale
                         scaleY = backgroundScale
@@ -123,12 +127,14 @@ fun HomeScreen(
                     )
                 }
             }
+            }
 
             SpotterBottomBar(
                 selected = SpotterTab.Search,
                 onSelected = viewModel::onTabSelected,
+                visible = barState.visible && successState?.isExpandedSpotVisible != true,
+                modifier = Modifier.align(Alignment.BottomCenter),
             )
-            }
 
             if (successState != null) {
                 MapBackHandler(

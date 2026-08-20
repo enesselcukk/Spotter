@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -31,6 +32,7 @@ import com.example.spotter.core.spotui.component.SpotSearchBar
 import com.example.spotter.core.spotui.component.SpotSearchSuggestionsPanel
 import com.example.spotter.core.spotui.component.SpotSpotsList
 import com.example.spotter.core.spotui.component.SpotterBottomBar
+import com.example.spotter.core.spotui.component.rememberScrollAwareBottomBarState
 import com.example.spotter.feature.favorites.presentation.generated.resources.Res
 import com.example.spotter.feature.favorites.presentation.generated.resources.favorites_empty
 import com.example.spotter.feature.favorites.presentation.generated.resources.favorites_empty_category
@@ -49,47 +51,57 @@ fun FavoritesScreen(
     val isDark = colors.background.luminance() < 0.5f
 
     CarbonFiberBackground(modifier = Modifier.fillMaxSize()) {
-        Column(
+        val barState = rememberScrollAwareBottomBarState()
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .then(if (isDark) Modifier else Modifier.background(colors.background))
-                .spotterStatusBarsPadding(),
+                .nestedScroll(barState.nestedScrollConnection),
         ) {
-            SpotSearchBar(
-                query = uiState.searchText,
-                onQueryChange = viewModel::onSearchTextChanged,
-                placeholder = stringResource(Res.string.favorites_search_placeholder),
-                onFocusChanged = viewModel::onSearchFocusChanged,
-                onClear = viewModel::onSearchClear,
-            )
-
-            if (uiState.isSearchActive) {
-                SpotSearchSuggestionsPanel(
-                    suggestions = uiState.searchSuggestions,
-                    onSuggestionSelected = viewModel::onSearchSuggestionSelected,
-                )
-                Box(modifier = Modifier.weight(1f))
-            } else {
-                Spacer(modifier = Modifier.height(12.dp))
-                SpotCategoryChips(
-                    categories = uiState.categories,
-                    selectedCategory = uiState.selectedCategory,
-                    onCategorySelected = viewModel::onCategorySelected,
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(if (isDark) Modifier else Modifier.background(colors.background))
+                    .spotterStatusBarsPadding(),
+            ) {
+                SpotSearchBar(
+                    query = uiState.searchText,
+                    onQueryChange = viewModel::onSearchTextChanged,
+                    placeholder = stringResource(Res.string.favorites_search_placeholder),
+                    onFocusChanged = viewModel::onSearchFocusChanged,
+                    onClear = viewModel::onSearchClear,
                 )
 
-                FavoritesList(
-                    favorites = uiState.filteredFavorites,
-                    totalCount = uiState.favorites.size,
-                    listLayoutMode = uiState.listLayoutMode,
-                    onNavigate = viewModel::onNavigateToSpot,
-                    onFavoriteToggle = viewModel::onFavoriteToggle,
-                    modifier = Modifier.weight(1f),
-                )
+                if (uiState.isSearchActive) {
+                    SpotSearchSuggestionsPanel(
+                        suggestions = uiState.searchSuggestions,
+                        onSuggestionSelected = viewModel::onSearchSuggestionSelected,
+                    )
+                    Box(modifier = Modifier.weight(1f))
+                } else {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    SpotCategoryChips(
+                        categories = uiState.categories,
+                        selectedCategory = uiState.selectedCategory,
+                        onCategorySelected = viewModel::onCategorySelected,
+                    )
+
+                    FavoritesList(
+                        favorites = uiState.filteredFavorites,
+                        totalCount = uiState.favorites.size,
+                        listLayoutMode = uiState.listLayoutMode,
+                        onNavigate = viewModel::onNavigateToSpot,
+                        onFavoriteToggle = viewModel::onFavoriteToggle,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
 
             SpotterBottomBar(
                 selected = SpotterTab.Favorites,
                 onSelected = viewModel::onTabSelected,
+                visible = barState.visible,
+                modifier = Modifier.align(Alignment.BottomCenter),
             )
         }
     }
