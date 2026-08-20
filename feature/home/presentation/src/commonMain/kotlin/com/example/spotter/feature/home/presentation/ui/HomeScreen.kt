@@ -2,6 +2,8 @@ package com.example.spotter.feature.home.presentation.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,10 +35,14 @@ import com.example.spotter.core.spotui.component.CarbonFiberBackground
 import com.example.spotter.core.spotui.component.SpotCategoryChips
 import com.example.spotter.core.spotui.component.SpotSearchBar
 import com.example.spotter.core.spotui.component.SpotSearchSuggestionsPanel
+import com.example.spotter.core.spotui.component.SpotExpandedCardOverlay
+import com.example.spotter.core.spotui.component.SpotCardBounds
 import com.example.spotter.core.spotui.component.SpotSpotsList
 import com.example.spotter.core.spotui.component.SpotterBottomBar
 import com.example.spotter.core.datastore.DefaultHomeViewMode
+import com.example.spotter.feature.home.presentation.ui.components.SpotExpandedMapPreview
 import com.example.spotter.feature.home.domain.model.SpotDto
+import com.example.spotter.feature.map.presentation.platform.MapBackHandler
 import com.example.spotter.feature.home.presentation.generated.resources.Res
 import com.example.spotter.feature.home.presentation.generated.resources.home_empty_category
 import com.example.spotter.feature.home.presentation.generated.resources.home_empty_spots
@@ -59,12 +66,24 @@ fun HomeScreen(
     val isDark = colors.background.luminance() < 0.5f
 
     CarbonFiberBackground(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .then(if (isDark) Modifier else Modifier.background(colors.background))
-                .spotterStatusBarsPadding(),
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            val successState = uiState as? HomeUiState.Success
+            val backgroundScale by animateFloatAsState(
+                targetValue = if (successState?.isExpandedSpotVisible == true) 0.96f else 1f,
+                animationSpec = tween(durationMillis = 520),
+                label = "homeBackgroundScale",
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = backgroundScale
+                        scaleY = backgroundScale
+                    }
+                    .then(if (isDark) Modifier else Modifier.background(colors.background))
+                    .spotterStatusBarsPadding(),
+            ) {
             when (val state = uiState) {
                 HomeUiState.Loading -> {
                     SpotSearchBar(
@@ -109,6 +128,37 @@ fun HomeScreen(
                 selected = SpotterTab.Search,
                 onSelected = viewModel::onTabSelected,
             )
+            }
+
+            if (successState != null) {
+                MapBackHandler(
+                    enabled = successState.isExpandedSpotVisible,
+                    onBack = viewModel::onExpandedSpotDismiss,
+                )
+
+                val expandedSpot = successState.spots.find { it.id == successState.expandedSpotId }
+
+                SpotExpandedCardOverlay(
+                    visible = successState.isExpandedSpotVisible,
+                    sourceBounds = successState.expandedSpotSourceBounds,
+                    spot = expandedSpot,
+                    isFavorite = successState.expandedSpotId in successState.favoriteIds,
+                    onNavigate = viewModel::onNavigateToSpot,
+                    onFavoriteToggle = viewModel::onFavoriteToggle,
+                    onDismiss = viewModel::onExpandedSpotDismiss,
+                    onExitAnimationEnd = viewModel::onExpandedSpotDismissAnimationEnd,
+                    mapContent = { spot ->
+                        SpotExpandedMapPreview(
+                            spot = spot,
+                            userLatitude = successState.userLatitude,
+                            userLongitude = successState.userLongitude,
+                            routeGeometry = successState.expandedRouteGeometry,
+                            isRouteLoading = successState.isExpandedRouteLoading,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    },
+                )
+            }
         }
     }
 }
@@ -152,6 +202,8 @@ private fun HomeSearchContent(
                 listLayoutMode = state.listLayoutMode,
                 onFavoriteToggle = actions::onFavoriteToggle,
                 onNavigate = onNavigate,
+                onSpotClick = actions::onSpotCardClick,
+                expandedSpotId = state.expandedSpotId,
                 onRetry = actions::retry,
                 modifier = Modifier.weight(1f),
             )
@@ -169,6 +221,8 @@ private fun HomeListContent(
     listLayoutMode: DefaultHomeViewMode,
     onFavoriteToggle: (Long) -> Unit,
     onNavigate: (Long) -> Unit,
+    onSpotClick: (Long, SpotCardBounds) -> Unit,
+    expandedSpotId: Long? = null,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -216,6 +270,8 @@ private fun HomeListContent(
         selectedSpotId = selectedSpotId,
         onNavigate = onNavigate,
         onFavoriteToggle = onFavoriteToggle,
+        onSpotClick = onSpotClick,
+        expandedSpotId = expandedSpotId,
         modifier = modifier,
     )
 }

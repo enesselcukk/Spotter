@@ -41,6 +41,7 @@ kotlin {
             implementation(project(":feature:home:domain"))
             implementation(project(":feature:map:contract"))
             implementation(project(":feature:map:domain"))
+            implementation(project(":feature:map:presentation"))
             implementation(project(":feature:favorites:contract"))
             implementation(project(":feature:favorites:domain"))
             implementation(project(":feature:settings:contract"))

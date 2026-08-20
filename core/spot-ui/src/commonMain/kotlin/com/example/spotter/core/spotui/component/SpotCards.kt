@@ -19,16 +19,25 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,7 +66,9 @@ fun SpotDetailCard(
     markerIndex: Int = 1,
     onNavigate: (Long) -> Unit,
     onFavoriteToggle: (Long) -> Unit,
+    onCardClick: ((Long, SpotCardBounds) -> Unit)? = null,
     onMapPreviewClick: ((Long) -> Unit)? = null,
+    isSourceHidden: Boolean = false,
     highlighted: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
@@ -76,82 +87,105 @@ fun SpotDetailCard(
     } else {
         stringResource(Res.string.spot_add_to_favorite)
     }
+    var cardBounds by remember(spot.id) { mutableStateOf(SpotCardBounds.Zero) }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .graphicsLayer { alpha = if (isSourceHidden) 0f else 1f }
+            .onGloballyPositioned { coordinates ->
+                val rect: Rect = coordinates.boundsInRoot()
+                cardBounds = SpotCardBounds(
+                    left = rect.left,
+                    top = rect.top,
+                    width = rect.width,
+                    height = rect.height,
+                )
+            }
             .clip(cardShape)
             .background(if (isDark) SpotterDarkSurfaceElevated else colors.surface)
             .border(1.dp, borderColor, cardShape)
             .padding(14.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            SpotBrandBadge(
-                spot = spot,
-                isFavorite = isFavorite,
-                modifier = Modifier.size(44.dp),
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = spotDisplayName(spot),
-                    color = colors.onSurface,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    if (onCardClick != null) {
+                        Modifier.clickable { onCardClick(spot.id, cardBounds) }
+                    } else {
+                        Modifier
+                    },
+                ),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SpotBrandBadge(
+                    spot = spot,
+                    isFavorite = isFavorite,
+                    modifier = Modifier.size(44.dp),
                 )
-                if (!socket.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "⚡ $socket",
-                        color = colors.onSurfaceVariant,
-                        fontSize = 12.sp,
+                        text = spotDisplayName(spot),
+                        color = colors.onSurface,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    if (!socket.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = "⚡ $socket",
+                            color = colors.onSurfaceVariant,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            SpotMapPreview(
-                markerIndex = markerIndex,
-                onClick = onMapPreviewClick?.let { callback -> { callback(spot.id) } },
-                modifier = Modifier
-                    .weight(0.42f)
-                    .height(86.dp),
-            )
-            Column(
-                modifier = Modifier.weight(0.58f),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = spotDistanceLabel(spot),
-                    color = colors.onSurface,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp,
+                SpotMapPreview(
+                    markerIndex = markerIndex,
+                    onClick = onMapPreviewClick?.let { callback -> { callback(spot.id) } },
+                    modifier = Modifier
+                        .weight(0.42f)
+                        .height(86.dp),
                 )
-                Text(
-                    text = spotOpeningHoursLabel(spot),
-                    color = SpotterGreen,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-                if (!socket.isNullOrBlank()) {
+                Column(
+                    modifier = Modifier.weight(0.58f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
                     Text(
-                        text = socket,
-                        color = colors.onSurfaceVariant,
-                        fontSize = 12.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
+                        text = spotDistanceLabel(spot),
+                        color = colors.onSurface,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
                     )
+                    Text(
+                        text = spotOpeningHoursLabel(spot),
+                        color = SpotterGreen,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    if (!socket.isNullOrBlank()) {
+                        Text(
+                            text = socket,
+                            color = colors.onSurfaceVariant,
+                            fontSize = 12.sp,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
         }
@@ -188,6 +222,8 @@ fun SpotColumnCard(
     markerIndex: Int = 1,
     onNavigate: (Long) -> Unit,
     onFavoriteToggle: (Long) -> Unit,
+    onCardClick: ((Long, SpotCardBounds) -> Unit)? = null,
+    isSourceHidden: Boolean = false,
     highlighted: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
@@ -202,56 +238,80 @@ fun SpotColumnCard(
     }
     val socket = spotSocketLabel(spot)
 
+    var cardBounds by remember(spot.id) { mutableStateOf(SpotCardBounds.Zero) }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .graphicsLayer { alpha = if (isSourceHidden) 0f else 1f }
+            .onGloballyPositioned { coordinates ->
+                val rect: Rect = coordinates.boundsInRoot()
+                cardBounds = SpotCardBounds(
+                    left = rect.left,
+                    top = rect.top,
+                    width = rect.width,
+                    height = rect.height,
+                )
+            }
             .clip(cardShape)
             .background(if (isDark) SpotterDarkSurfaceElevated else colors.surface)
             .border(1.dp, borderColor, cardShape)
             .padding(10.dp),
     ) {
-        SpotMapPreview(
-            markerIndex = markerIndex,
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(72.dp),
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = spotDisplayName(spot),
-            color = colors.onSurface,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-        if (!socket.isNullOrBlank()) {
-            Spacer(modifier = Modifier.height(2.dp))
+                .then(
+                    if (onCardClick != null) {
+                        Modifier.clickable { onCardClick(spot.id, cardBounds) }
+                    } else {
+                        Modifier
+                    },
+                ),
+        ) {
+            SpotMapPreview(
+                markerIndex = markerIndex,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(72.dp),
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "⚡ $socket",
-                color = colors.onSurfaceVariant,
+                text = spotDisplayName(spot),
+                color = colors.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (!socket.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "⚡ $socket",
+                    color = colors.onSurfaceVariant,
+                    fontSize = 11.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = spotDistanceLabel(spot),
+                color = colors.onSurface,
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = spotOpeningHoursLabel(spot),
+                color = SpotterGreen,
                 fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = spotDistanceLabel(spot),
-            color = colors.onSurface,
-            fontWeight = FontWeight.Medium,
-            fontSize = 12.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = spotOpeningHoursLabel(spot),
-            color = SpotterGreen,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
         Spacer(modifier = Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -350,7 +410,7 @@ private fun SpotColumnIconButton(
 }
 
 @Composable
-private fun SpotCardActionButton(
+internal fun SpotCardActionButton(
     label: String,
     icon: SpotCardActionIcon,
     onClick: () -> Unit,
@@ -365,6 +425,7 @@ private fun SpotCardActionButton(
 
     Row(
         modifier = modifier
+            .shadow(elevation = 2.dp, shape = shape, clip = false)
             .height(44.dp)
             .clip(shape)
             .background(background)
@@ -388,13 +449,13 @@ private fun SpotCardActionButton(
     }
 }
 
-private enum class SpotCardActionIcon {
+internal enum class SpotCardActionIcon {
     Navigate,
     Favorite,
 }
 
 @Composable
-private fun SpotCardActionIconView(
+internal fun SpotCardActionIconView(
     icon: SpotCardActionIcon,
     tint: Color,
     modifier: Modifier = Modifier,

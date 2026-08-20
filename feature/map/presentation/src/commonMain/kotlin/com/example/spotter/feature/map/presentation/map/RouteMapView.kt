@@ -20,6 +20,7 @@ expect fun RouteMapView(
     onSpotSelected: (Long) -> Unit,
     modifier: Modifier = Modifier,
     followUser: Boolean = false,
+    interactive: Boolean = true,
 )
 
 enum class MapCamera {

@@ -21,6 +21,7 @@ actual fun RouteMapView(
     onSpotSelected: (Long) -> Unit,
     modifier: Modifier,
     followUser: Boolean,
+    interactive: Boolean,
 ) {
     val colors = MaterialTheme.colorScheme
 

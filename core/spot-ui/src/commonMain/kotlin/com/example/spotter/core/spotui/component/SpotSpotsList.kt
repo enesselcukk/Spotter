@@ -22,6 +22,8 @@ fun SpotSpotsList(
     selectedSpotId: Long?,
     onNavigate: (Long) -> Unit,
     onFavoriteToggle: (Long) -> Unit,
+    onSpotClick: (Long, SpotCardBounds) -> Unit,
+    expandedSpotId: Long? = null,
     modifier: Modifier = Modifier,
     alwaysHighlighted: Boolean = false,
 ) {
@@ -39,6 +41,8 @@ fun SpotSpotsList(
                         markerIndex = index + 1,
                         onNavigate = onNavigate,
                         onFavoriteToggle = onFavoriteToggle,
+                        onCardClick = onSpotClick,
+                        isSourceHidden = spot.id == expandedSpotId,
                         highlighted = alwaysHighlighted || spot.id == selectedSpotId,
                     )
                 }
@@ -60,6 +64,8 @@ fun SpotSpotsList(
                         markerIndex = index + 1,
                         onNavigate = onNavigate,
                         onFavoriteToggle = onFavoriteToggle,
+                        onCardClick = onSpotClick,
+                        isSourceHidden = spot.id == expandedSpotId,
                         highlighted = alwaysHighlighted || spot.id == selectedSpotId,
                     )
                 }

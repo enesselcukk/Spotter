@@ -5,7 +5,5 @@ import com.example.spotter.feature.map.domain.repository.NavigationLocationTrack
 import org.koin.core.module.Module
 
 internal actual fun Module.bindNavigationLocationTracker() {
-    single<NavigationLocationTracker> {
-        NavigationLocationTrackerImpl(context = get())
-    }
+    single<NavigationLocationTracker> { NavigationLocationTrackerImpl() }
 }

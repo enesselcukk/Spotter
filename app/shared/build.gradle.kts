@@ -22,6 +22,7 @@ kotlin {
 
     sourceSets {
         androidMain.dependencies {
+            implementation(project(":core:location"))
             implementation(libs.compose.uiTooling)
             implementation(libs.koin.android)
             implementation(libs.ktor.client.okhttp)

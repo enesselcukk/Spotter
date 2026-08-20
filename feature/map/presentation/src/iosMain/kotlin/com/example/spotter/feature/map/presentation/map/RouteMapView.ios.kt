@@ -8,10 +8,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.interop.UIKitView
 import com.example.spotter.feature.home.domain.model.SpotDto
 import com.example.spotter.feature.map.domain.model.RoutePoint
+import kotlinx.cinterop.CValue
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.allocArray
 import kotlinx.cinterop.get
 import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.useContents
 import platform.CoreLocation.CLLocationCoordinate2D
 import platform.CoreLocation.CLLocationCoordinate2DMake
 import platform.MapKit.MKAnnotationView
@@ -19,6 +21,8 @@ import platform.MapKit.addOverlay
 import platform.MapKit.overlays
 import platform.MapKit.removeOverlays
 import platform.MapKit.MKCoordinateRegionMakeWithDistance
+import platform.MapKit.MKCoordinateRegionMake
+import platform.MapKit.MKCoordinateSpanMake
 import platform.MapKit.MKMapView
 import platform.MapKit.MKMapViewDelegateProtocol
 import platform.MapKit.MKOverlayProtocol
@@ -46,6 +50,7 @@ actual fun RouteMapView(
     onSpotSelected: (Long) -> Unit,
     modifier: Modifier,
     followUser: Boolean,
+    interactive: Boolean,
 ) {
     val camera = remember { CameraState() }
     val delegate = remember { RouteMapDelegate() }
@@ -55,15 +60,16 @@ actual fun RouteMapView(
         MKMapView().apply {
             this.delegate = delegate
             showsUserLocation = false
-            showsCompass = true
-            showsScale = true
+            showsCompass = interactive
+            showsScale = false
             userTrackingMode = MKUserTrackingModeNone
+            userInteractionEnabled = interactive
         }
     }
 
     val userAnnotation = remember { MKPointAnnotation() }
 
-    LaunchedEffect(mapView, spots, selectedSpotId, routeGeometry) {
+    LaunchedEffect(mapView, spots, selectedSpotId, routeGeometry, interactive) {
         mapView.removeAnnotations(mapView.annotations)
         mapView.removeOverlays(mapView.overlays)
 
@@ -85,10 +91,11 @@ actual fun RouteMapView(
         if (polyline != null) {
             mapView.addOverlay(polyline)
             if (!followUser) {
-                mapView.setVisibleMapRect(
-                    polyline.boundingMapRect,
-                    edgePadding = UIEdgeInsetsMake(96.0, 48.0, 280.0, 48.0),
-                    animated = true,
+                mapView.fitRouteBounds(
+                    routeGeometry = routeGeometry,
+                    userLocation = userLocation,
+                    spots = spots,
+                    interactive = interactive,
                 )
             }
         } else if (!followUser) {
@@ -116,13 +123,12 @@ actual fun RouteMapView(
             }
 
             MapCamera.FitRoute -> {
-                routeGeometry.toPolyline()?.let { polyline ->
-                    mapView.setVisibleMapRect(
-                        polyline.boundingMapRect,
-                        edgePadding = UIEdgeInsetsMake(96.0, 48.0, 280.0, 48.0),
-                        animated = true,
-                    )
-                }
+                mapView.fitRouteBounds(
+                    routeGeometry = routeGeometry,
+                    userLocation = userLocation,
+                    spots = spots,
+                    interactive = interactive,
+                )
             }
 
             MapCamera.ZoomIn -> {
@@ -138,10 +144,27 @@ actual fun RouteMapView(
         mapState.consume()
     }
 
+    LaunchedEffect(mapView, interactive) {
+        mapView.userInteractionEnabled = interactive
+        mapView.showsCompass = interactive
+    }
+
     UIKitView(
         factory = { mapView },
         modifier = modifier.fillMaxSize(),
         update = { },
+        onResize = { view, rect ->
+            rect.useContents {
+                if (size.width > 0.0 && size.height > 0.0 && !followUser && routeGeometry.size > 1) {
+                    view.fitRouteBounds(
+                        routeGeometry = routeGeometry,
+                        userLocation = userLocation,
+                        spots = spots,
+                        interactive = interactive,
+                    )
+                }
+            }
+        },
     )
 }
 
@@ -186,6 +209,59 @@ private fun List<RoutePoint>.toPolyline(): MKPolyline? {
         }
         MKPolyline.polylineWithCoordinates(coordinates, size.toULong())
     }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private fun MKMapView.fitRouteBounds(
+    routeGeometry: List<RoutePoint>,
+    userLocation: RoutePoint,
+    spots: List<SpotDto>,
+    interactive: Boolean,
+) {
+    layoutIfNeeded()
+    if (interactive) {
+        routeGeometry.toPolyline()?.let { polyline ->
+            setVisibleMapRect(
+                mapRect = polyline.boundingMapRect,
+                edgePadding = UIEdgeInsetsMake(96.0, 48.0, 280.0, 48.0),
+                animated = true,
+            )
+        }
+        return
+    }
+
+    val fitPoints = buildList {
+        addAll(routeGeometry)
+        add(userLocation)
+        spots.forEach { spot ->
+            add(RoutePoint(spot.lat, spot.lon))
+        }
+    }
+    val region = fitPoints.toCoordinateRegion() ?: return
+    setRegion(region, animated = true)
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private fun List<RoutePoint>.toCoordinateRegion(
+    paddingFactor: Double = 1.35,
+): CValue<platform.MapKit.MKCoordinateRegion>? {
+    if (isEmpty()) return null
+
+    val minLat = minOf { it.latitude }
+    val maxLat = maxOf { it.latitude }
+    val minLon = minOf { it.longitude }
+    val maxLon = maxOf { it.longitude }
+    val center = CLLocationCoordinate2DMake(
+        latitude = (minLat + maxLat) / 2.0,
+        longitude = (minLon + maxLon) / 2.0,
+    )
+    val latDelta = ((maxLat - minLat) * paddingFactor).coerceAtLeast(0.003)
+    val lonDelta = ((maxLon - minLon) * paddingFactor).coerceAtLeast(0.003)
+
+    return MKCoordinateRegionMake(
+        centerCoordinate = center,
+        span = MKCoordinateSpanMake(latDelta, lonDelta),
+    )
 }
 
 @OptIn(ExperimentalForeignApi::class)

@@ -13,6 +13,7 @@ import com.example.spotter.core.spotui.SpotCategories
 import com.example.spotter.core.spotui.SpotSearchSuggestion
 import com.example.spotter.core.spotui.SpotSearchSuggestionKind
 import com.example.spotter.core.spotui.SpotterTab
+import com.example.spotter.core.spotui.component.SpotCardBounds
 import com.example.spotter.core.spotui.filterByCategoryAndSearch
 import com.example.spotter.feature.favorites.contract.FavoritesScreenDestination
 import com.example.spotter.feature.favorites.domain.usecase.ObserveFavoriteIdsUseCase
@@ -25,7 +26,9 @@ import com.example.spotter.feature.home.domain.usecase.GetNearbySpotsUseCase
 import com.example.spotter.feature.home.domain.usecase.ResolveSearchLocationUseCase
 import com.example.spotter.feature.home.domain.util.SpotListSorter
 import com.example.spotter.feature.map.contract.MapScreenDestination
+import com.example.spotter.feature.map.domain.model.RoutePoint
 import com.example.spotter.feature.map.domain.repository.MapSpotsHandoff
+import com.example.spotter.feature.map.domain.usecase.GetRoutePlanUseCase
 import com.example.spotter.feature.settings.contract.SettingsScreenDestination
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,6 +45,7 @@ class HomeViewModel(
     private val homePreloadRepository: HomePreloadRepository,
     private val userSettingsRepository: UserSettingsRepository,
     private val mapSpotsHandoff: MapSpotsHandoff,
+    private val getRoutePlanUseCase: GetRoutePlanUseCase,
     private val navigationManager: NavigationManager,
     private val observeFavoriteIdsUseCase: ObserveFavoriteIdsUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
@@ -54,6 +58,7 @@ class HomeViewModel(
     private var storedCategory = SpotCategories.CHARGING
     private val recentSearchQueries = mutableListOf<String>()
     private var loadJob: Job? = null
+    private var expandedRouteJob: Job? = null
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -152,9 +157,80 @@ class HomeViewModel(
         updateSuccess { it.copy(selectedSpotId = spotId) }
     }
 
+    override fun onSpotCardClick(spotId: Long, sourceBounds: SpotCardBounds) {
+        updateSuccess {
+            it.copy(
+                expandedSpotId = spotId,
+                expandedSpotSourceBounds = sourceBounds,
+                isExpandedSpotVisible = true,
+                selectedSpotId = spotId,
+                expandedRouteGeometry = emptyList(),
+                isExpandedRouteLoading = true,
+            )
+        }
+        loadExpandedRoute(spotId)
+    }
+
+    override fun onExpandedSpotDismiss() {
+        expandedRouteJob?.cancel()
+        updateSuccess { it.copy(isExpandedSpotVisible = false) }
+    }
+
+    override fun onExpandedSpotDismissAnimationEnd() {
+        updateSuccess {
+            it.copy(
+                expandedSpotId = null,
+                expandedSpotSourceBounds = null,
+                expandedRouteGeometry = emptyList(),
+                isExpandedRouteLoading = false,
+            )
+        }
+    }
+
+    private fun loadExpandedRoute(spotId: Long) {
+        expandedRouteJob?.cancel()
+        expandedRouteJob = viewModelScope.launch {
+            val current = currentSuccess ?: return@launch
+            val spot = current.spots.find { it.id == spotId } ?: return@launch
+            val origin = RoutePoint(current.userLatitude, current.userLongitude)
+            val destination = RoutePoint(spot.lat, spot.lon)
+
+            getRoutePlanUseCase(origin = origin, destination = destination).collect { result ->
+                if (currentSuccess?.expandedSpotId != spotId) return@collect
+                when (result) {
+                    is RestResult.Loading -> Unit
+
+                    is RestResult.Success -> updateSuccess {
+                        it.copy(
+                            expandedRouteGeometry = result.result.geometry,
+                            isExpandedRouteLoading = false,
+                        )
+                    }
+
+                    is RestResult.Error -> updateSuccess {
+                        it.copy(
+                            expandedRouteGeometry = listOf(origin, destination),
+                            isExpandedRouteLoading = false,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     override fun onNavigateToSpot(spotId: Long) {
         val current = currentSuccess ?: return
 
+        expandedRouteJob?.cancel()
+        updateSuccess {
+            it.copy(
+                expandedSpotId = null,
+                expandedSpotSourceBounds = null,
+                isExpandedSpotVisible = false,
+                expandedRouteGeometry = emptyList(),
+                isExpandedRouteLoading = false,
+            )
+        }
         mapSpotsHandoff.publish(current.spots)
         navigationManager.navigate(
             NavigationCommand.NavigateTo(
@@ -318,6 +394,11 @@ class HomeViewModel(
             isSearchActive = current?.isSearchActive ?: false,
             recentSearchQueries = recentSearchQueries.toList(),
             listLayoutMode = listLayoutMode,
+            expandedSpotId = current?.expandedSpotId,
+            expandedSpotSourceBounds = current?.expandedSpotSourceBounds,
+            isExpandedSpotVisible = current?.isExpandedSpotVisible ?: false,
+            expandedRouteGeometry = current?.expandedRouteGeometry.orEmpty(),
+            isExpandedRouteLoading = current?.isExpandedRouteLoading ?: false,
         )
     }
 

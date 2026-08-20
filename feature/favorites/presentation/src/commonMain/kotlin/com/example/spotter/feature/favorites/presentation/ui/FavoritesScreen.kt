@@ -124,6 +124,7 @@ private fun FavoritesList(
                 selectedSpotId = null,
                 onNavigate = onNavigate,
                 onFavoriteToggle = onFavoriteToggle,
+                onSpotClick = { _, _ -> },
                 alwaysHighlighted = true,
                 modifier = modifier,
             )

@@ -5,7 +5,9 @@ import com.example.spotter.core.datastore.DefaultHomeViewMode
 import com.example.spotter.core.spotui.SpotCategories
 import com.example.spotter.core.spotui.buildSearchSuggestions
 import com.example.spotter.core.spotui.filterByCategoryAndSearch
+import com.example.spotter.core.spotui.component.SpotCardBounds
 import com.example.spotter.feature.home.domain.model.SpotDto
+import com.example.spotter.feature.map.domain.model.RoutePoint
 
 @Immutable
 sealed interface HomeUiState {
@@ -26,6 +28,11 @@ sealed interface HomeUiState {
         val isSearchActive: Boolean = false,
         val recentSearchQueries: List<String> = emptyList(),
         val listLayoutMode: DefaultHomeViewMode = DefaultHomeViewMode.LIST,
+        val expandedSpotId: Long? = null,
+        val expandedSpotSourceBounds: SpotCardBounds? = null,
+        val isExpandedSpotVisible: Boolean = false,
+        val expandedRouteGeometry: List<RoutePoint> = emptyList(),
+        val isExpandedRouteLoading: Boolean = false,
     ) : HomeUiState {
         val filteredSpots: List<SpotDto>
             get() = spots.filterByCategoryAndSearch(selectedCategory, searchText)

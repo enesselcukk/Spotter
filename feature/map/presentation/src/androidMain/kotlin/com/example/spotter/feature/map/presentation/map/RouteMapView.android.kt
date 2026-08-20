@@ -55,6 +55,7 @@ actual fun RouteMapView(
     onSpotSelected: (Long) -> Unit,
     modifier: Modifier,
     followUser: Boolean,
+    interactive: Boolean,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -69,7 +70,7 @@ actual fun RouteMapView(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
             )
-            setMultiTouchControls(true)
+            setMultiTouchControls(interactive)
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
             isHorizontalMapRepetitionEnabled = false
             isVerticalMapRepetitionEnabled = false
@@ -78,6 +79,13 @@ actual fun RouteMapView(
             controller.setCenter(GeoPoint(userLocation.latitude, userLocation.longitude))
 
             setOnTouchListener { view, event ->
+                if (!interactive) {
+                    when (event.actionMasked) {
+                        MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE ->
+                            view.parent?.requestDisallowInterceptTouchEvent(true)
+                    }
+                    return@setOnTouchListener true
+                }
                 when (event.actionMasked) {
                     MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE ->
                         view.parent?.requestDisallowInterceptTouchEvent(true)
@@ -137,7 +145,9 @@ actual fun RouteMapView(
                     setAnchor(Marker.ANCHOR_CENTER, if (isSelected) Marker.ANCHOR_BOTTOM else Marker.ANCHOR_CENTER)
                     icon = if (isSelected) destinationPin(context) else spotDot(context, backgroundArgb)
                     setOnMarkerClickListener { _, _ ->
-                        onSpotSelected(spot.id)
+                        if (interactive) {
+                            onSpotSelected(spot.id)
+                        }
                         true
                     }
                 },
