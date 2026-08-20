@@ -27,6 +27,7 @@ kotlin {
             implementation(project(":core:data"))
             implementation(project(":core:datastore"))
             implementation(project(":core:domain"))
+            implementation(project(":core:location"))
             implementation(project(":core:model"))
             implementation(project(":core:network"))
             implementation(project(":feature:home:domain"))
