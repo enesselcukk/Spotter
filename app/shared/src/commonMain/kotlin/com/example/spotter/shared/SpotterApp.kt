@@ -33,8 +33,7 @@ fun SpotterApp() {
         ImageLoader.Builder(context)
             .components {
                 add(KtorNetworkFetcherFactory())
-            }
-            .build()
+            }.build()
     }
 
     val settingsRepository: UserSettingsRepository = koinInject()

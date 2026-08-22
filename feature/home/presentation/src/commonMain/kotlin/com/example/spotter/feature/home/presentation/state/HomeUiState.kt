@@ -1,4 +1,4 @@
-package com.example.spotter.feature.home.presentation.ui
+package com.example.spotter.feature.home.presentation.state
 
 import androidx.compose.runtime.Immutable
 import com.example.spotter.core.datastore.DefaultHomeViewMode

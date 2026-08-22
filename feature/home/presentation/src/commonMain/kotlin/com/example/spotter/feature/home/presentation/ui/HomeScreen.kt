@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.spotter.core.designsystem.component.spotterStatusBarsPadding
@@ -42,7 +40,10 @@ import com.example.spotter.core.spotui.component.SpotSpotsList
 import com.example.spotter.core.spotui.component.SpotterBottomBar
 import com.example.spotter.core.spotui.component.rememberScrollAwareBottomBarState
 import com.example.spotter.core.datastore.DefaultHomeViewMode
+import com.example.spotter.feature.home.presentation.state.HomeActions
+import com.example.spotter.feature.home.presentation.state.HomeUiState
 import com.example.spotter.feature.home.presentation.ui.components.SpotExpandedMapPreview
+import com.example.spotter.feature.home.presentation.ui.viewmodel.HomeViewModel
 import com.example.spotter.feature.home.domain.model.SpotDto
 import com.example.spotter.feature.map.presentation.platform.MapBackHandler
 import com.example.spotter.feature.home.presentation.generated.resources.Res

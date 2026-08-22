@@ -1,4 +1,4 @@
-package com.example.spotter.feature.home.presentation.ui
+package com.example.spotter.feature.home.presentation.state
 
 import com.example.spotter.core.spotui.SpotterTab
 import com.example.spotter.core.spotui.component.SpotCardBounds
