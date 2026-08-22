@@ -11,7 +11,7 @@ actual object LocalAppLocale {
     private var default: Locale? = null
 
     actual val current: String
-        @Composable get() = Locale.getDefault().toLanguageTag()
+    @Composable get() = Locale.getDefault().toLanguageTag()
 
     @Composable
     actual infix fun provides(value: String?): ProvidedValue<*> {

@@ -37,7 +37,6 @@ kotlin {
             implementation(project(":core:navigation"))
             implementation(project(":core:spot-ui"))
             implementation(project(":feature:home:contract"))
-            implementation(project(":feature:detail:contract"))
             implementation(project(":feature:home:domain"))
             implementation(project(":feature:map:contract"))
             implementation(project(":feature:map:domain"))

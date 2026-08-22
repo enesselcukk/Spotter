@@ -58,8 +58,6 @@ kotlin {
             implementation(project(":feature:settings:presentation"))
             implementation(project(":feature:splash:contract"))
             implementation(project(":feature:splash:presentation"))
-            implementation(project(":feature:detail:domain"))
-            implementation(project(":feature:detail:presentation"))
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
